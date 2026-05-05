@@ -1,7 +1,13 @@
 <?php
 
 use Illuminate\Support\Facades\Route;
-use App\Http\Controllers\AdminDashboardController;
+use App\Http\Controllers\Admin\AdminDashboardController;
+use App\Http\Controllers\Admin\StudentController;
+use App\Http\Controllers\Admin\ProfessorController;
+use App\Http\Controllers\Admin\FiliereController;
+use App\Http\Controllers\Admin\ModuleController;
+use App\Http\Controllers\Admin\RoomController;
+
 use App\Http\Controllers\ProfesseurDashboardController;
 use App\Http\Controllers\EtudiantDashboardController;
 use App\Http\Controllers\Auth\AuthenticatedSessionController;
@@ -22,6 +28,23 @@ Route::post('/register', [RegisteredUserController::class, 'store']);
 // Routes Admin (protégées par le middleware CheckAdmin)
 Route::middleware(['auth', 'CheckAdmin'])->prefix('admin')->name('admin.')->group(function () {
     Route::get('/dashboard', [AdminDashboardController::class, 'index'])->name('dashboard');
+    
+    // CRUD Étudiants
+    Route::resource('students', StudentController::class);
+    
+    // CRUD Professeurs
+    Route::resource('professors', ProfessorController::class);
+    
+    // CRUD Filières
+    Route::resource('filieres', FiliereController::class);
+    
+    // CRUD Modules
+    Route::resource('modules', ModuleController::class);
+    
+    // CRUD Salles
+    Route::resource('rooms', RoomController::class);
+    
+
 });
 
 // Routes Professeur (protégées par le middleware CheckProfesseur)

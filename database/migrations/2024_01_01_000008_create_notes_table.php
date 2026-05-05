@@ -11,20 +11,17 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('notes', function (Blueprint $table) {
+        Schema::create('grades', function (Blueprint $table) {
             $table->id();
-            $table->unsignedBigInteger('student_id');
-            $table->unsignedBigInteger('element_module_id');
-            $table->decimal('note', 5, 2);
-            $table->enum('session', ['normale', 'rattrapage'])->default('normale');
-            $table->string('annee_universitaire');
+            $table->foreignId('student_id')->constrained()->onDelete('cascade');
+            $table->foreignId('module_element_id')->constrained('module_elements')->onDelete('cascade');
+            $table->decimal('score', 5, 2);
+            $table->enum('session', ['normal', 'retake'])->default('normal');
+            $table->string('academic_year');
             $table->text('observation')->nullable();
             $table->timestamps();
 
-            $table->foreign('student_id')->references('id')->on('students')->onDelete('cascade');
-            $table->foreign('element_module_id')->references('id')->on('elements_modules')->onDelete('cascade');
-
-            $table->unique(['student_id', 'element_module_id', 'session', 'annee_universitaire']);
+            $table->unique(['student_id', 'module_element_id', 'session', 'academic_year']);
         });
     }
 

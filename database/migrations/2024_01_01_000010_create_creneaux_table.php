@@ -11,22 +11,18 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('creneaux', function (Blueprint $table) {
+        Schema::create('schedules', function (Blueprint $table) {
             $table->id();
-            $table->unsignedBigInteger('professeur_id');
-            $table->unsignedBigInteger('module_id');
-            $table->unsignedBigInteger('salle_id');
-            $table->string('jour');
-            $table->time('heure_debut');
-            $table->time('heure_fin');
-            $table->enum('type_seance', ['cours', 'tp', 'td'])->default('cours');
-            $table->string('groupe')->nullable();
-            $table->string('annee_universitaire');
+            $table->foreignId('professor_id')->constrained('professors')->onDelete('cascade');
+            $table->foreignId('module_id')->constrained()->onDelete('cascade');
+            $table->foreignId('room_id')->constrained('rooms')->onDelete('cascade');
+            $table->string('day');
+            $table->time('start_time');
+            $table->time('end_time');
+            $table->enum('type', ['lecture', 'tp', 'td'])->default('lecture');
+            $table->string('group')->nullable();
+            $table->string('academic_year');
             $table->timestamps();
-
-            $table->foreign('professeur_id')->references('id')->on('users')->onDelete('cascade');
-            $table->foreign('module_id')->references('id')->on('modules')->onDelete('cascade');
-            $table->foreign('salle_id')->references('id')->on('salles')->onDelete('cascade');
         });
     }
 

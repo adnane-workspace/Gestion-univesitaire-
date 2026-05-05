@@ -13,9 +13,11 @@ return new class extends Migration
     {
         Schema::create('filieres', function (Blueprint $table) {
             $table->id();
+            $table->string('name');
             $table->string('code')->unique();
-            $table->string('nom');
             $table->text('description')->nullable();
+            $table->integer('duration_years')->default(3);
+            $table->boolean('is_active')->default(true);
             $table->timestamps();
         });
     }

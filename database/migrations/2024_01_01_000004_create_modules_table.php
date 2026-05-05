@@ -13,15 +13,15 @@ return new class extends Migration
     {
         Schema::create('modules', function (Blueprint $table) {
             $table->id();
+            $table->string('name');
             $table->string('code')->unique();
-            $table->string('nom');
             $table->text('description')->nullable();
-            $table->unsignedBigInteger('filiere_id');
-            $table->integer('semestre');
-            $table->integer('coefficient')->default(1);
+            $table->integer('credits')->default(6);
+            $table->integer('hours')->default(40);
+            $table->integer('semester');
+            $table->foreignId('filiere_id')->constrained()->onDelete('cascade');
+            $table->boolean('is_active')->default(true);
             $table->timestamps();
-
-            $table->foreign('filiere_id')->references('id')->on('filieres')->onDelete('cascade');
         });
     }
 

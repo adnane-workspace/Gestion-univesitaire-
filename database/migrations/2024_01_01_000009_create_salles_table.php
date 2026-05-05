@@ -13,13 +13,13 @@ return new class extends Migration
     {
         Schema::create('salles', function (Blueprint $table) {
             $table->id();
+            $table->string('name');
             $table->string('code')->unique();
-            $table->string('nom');
-            $table->string('batiment')->nullable();
-            $table->integer('capacite')->default(30);
-            $table->enum('type', ['cours', 'tp', 'td', 'amphi'])->default('cours');
-            $table->text('equipement')->nullable();
-            $table->boolean('disponible')->default(true);
+            $table->integer('capacity')->default(30);
+            $table->string('type')->default('classroom');
+            $table->integer('floor')->default(0);
+            $table->string('building')->nullable();
+            $table->boolean('is_available')->default(true);
             $table->timestamps();
         });
     }
