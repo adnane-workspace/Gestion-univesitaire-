@@ -59,4 +59,5 @@ Route::middleware(['auth', 'CheckProfesseur'])->prefix('professeur')->name('prof
 // Routes Étudiant (protégées par le middleware CheckEtudiant)
 Route::middleware(['auth', 'CheckEtudiant'])->prefix('etudiant')->name('etudiant.')->group(function () {
     Route::get('/dashboard', [EtudiantDashboardController::class, 'index'])->name('dashboard');
+    Route::get('/grades', [EtudiantDashboardController::class, 'grades'])->name('grades');
 });

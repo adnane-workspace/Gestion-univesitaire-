@@ -3,11 +3,30 @@
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 
 class EtudiantDashboardController extends Controller
 {
     public function index()
     {
-        return view('etudiant.dashboard');
+        $student = Auth::user()->student;
+        return view('etudiant.dashboard', compact('student'));
+    }
+
+    public function grades()
+    {
+        $student = Auth::user()->student;
+        if (!$student) {
+            return redirect()->route('login')->with('error', 'Profil étudiant non trouvé.');
+        }
+
+        $grades = $student->grades()
+            ->with(['moduleElement.module'])
+            ->get()
+            ->groupBy(function($grade) {
+                return $grade->moduleElement->module->name;
+            });
+
+        return view('etudiant.grades', compact('grades'));
     }
 }

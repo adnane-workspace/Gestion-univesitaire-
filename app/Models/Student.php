@@ -11,6 +11,7 @@ class Student extends Model
 
     protected $fillable = [
         'user_id',
+        'filiere_id',
         'first_name',
         'last_name',
         'email',
@@ -32,6 +33,11 @@ class Student extends Model
     public function grades()
     {
         return $this->hasMany(Grade::class);
+    }
+
+    public function filiere()
+    {
+        return $this->belongsTo(Filiere::class);
     }
 
     public function getFullNameAttribute()

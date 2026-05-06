@@ -143,6 +143,7 @@ class DatabaseSeeder extends Seeder
 
             Student::create([
                 'user_id' => $user->id,
+                'filiere_id' => $filiereGinf->id,
                 'first_name' => $firstName,
                 'last_name' => $lastName,
                 'email' => $email,
