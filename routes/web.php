@@ -50,6 +50,10 @@ Route::middleware(['auth', 'CheckAdmin'])->prefix('admin')->name('admin.')->grou
 // Routes Professeur (protégées par le middleware CheckProfesseur)
 Route::middleware(['auth', 'CheckProfesseur'])->prefix('professeur')->name('professeur.')->group(function () {
     Route::get('/dashboard', [ProfesseurDashboardController::class, 'index'])->name('dashboard');
+    Route::get('/modules', [ProfesseurDashboardController::class, 'modules'])->name('modules');
+    Route::get('/grades', [ProfesseurDashboardController::class, 'grades'])->name('grades');
+    Route::post('/grades', [ProfesseurDashboardController::class, 'storeGrades'])->name('grades.store');
+    Route::get('/schedule', [ProfesseurDashboardController::class, 'schedule'])->name('schedule');
 });
 
 // Routes Étudiant (protégées par le middleware CheckEtudiant)

@@ -16,12 +16,13 @@ return new class extends Migration
             $table->foreignId('professor_id')->constrained('professors')->onDelete('cascade');
             $table->foreignId('module_id')->constrained()->onDelete('cascade');
             $table->foreignId('room_id')->constrained('rooms')->onDelete('cascade');
-            $table->string('day');
+            $table->string('day'); // Monday, Tuesday, etc.
+            $table->date('date')->nullable();
             $table->time('start_time');
             $table->time('end_time');
-            $table->enum('type', ['lecture', 'tp', 'td'])->default('lecture');
+            $table->string('type')->default('Cours'); // Cours, TP, TD, etc.
             $table->string('group')->nullable();
-            $table->string('academic_year');
+            $table->string('academic_year')->nullable();
             $table->timestamps();
         });
     }
@@ -31,6 +32,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('creneaux');
+        Schema::dropIfExists('schedules');
     }
 };

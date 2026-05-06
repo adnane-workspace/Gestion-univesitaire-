@@ -19,6 +19,13 @@ class Schedule extends Model
         'type',
         'group',
         'academic_year',
+        'date',
+    ];
+
+    protected $casts = [
+        'date' => 'date',
+        'start_time' => 'datetime',
+        'end_time' => 'datetime',
     ];
 
     public const TYPES = [

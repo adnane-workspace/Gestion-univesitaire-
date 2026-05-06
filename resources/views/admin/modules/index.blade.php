@@ -24,6 +24,7 @@
                         <th class="px-6 py-4 text-left text-xs font-semibold text-slate-500 uppercase tracking-wider">Code</th>
                         <th class="px-6 py-4 text-left text-xs font-semibold text-slate-500 uppercase tracking-wider">Module</th>
                         <th class="px-6 py-4 text-left text-xs font-semibold text-slate-500 uppercase tracking-wider">Filière</th>
+                        <th class="px-6 py-4 text-left text-xs font-semibold text-slate-500 uppercase tracking-wider">Professeur</th>
                         <th class="px-6 py-4 text-left text-xs font-semibold text-slate-500 uppercase tracking-wider">Crédits/Heures</th>
                         <th class="px-6 py-4 text-left text-xs font-semibold text-slate-500 uppercase tracking-wider">Semestre</th>
                         <th class="px-6 py-4 text-left text-xs font-semibold text-slate-500 uppercase tracking-wider">Actions</th>
@@ -43,6 +44,15 @@
                                     </span>
                                 @else
                                     <span class="text-xs text-slate-400">Aucune</span>
+                                @endif
+                            </td>
+                            <td class="px-6 py-4 text-sm">
+                                @if($module->professors->isNotEmpty())
+                                    <span class="font-medium text-indigo-600">
+                                        {{ $module->professors->first()->first_name }} {{ $module->professors->first()->last_name }}
+                                    </span>
+                                @else
+                                    <span class="text-slate-400 italic text-xs">Non assigné</span>
                                 @endif
                             </td>
                             <td class="px-6 py-4 text-slate-600 text-sm">

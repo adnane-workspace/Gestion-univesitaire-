@@ -11,7 +11,7 @@ class ModuleController extends Controller
 {
     public function index()
     {
-        $modules = Module::with('filiere')->latest()->paginate(10);
+        $modules = Module::with(['filiere', 'professors'])->latest()->paginate(10);
         return view('admin.modules.index', compact('modules'));
     }
 

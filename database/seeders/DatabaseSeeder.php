@@ -8,6 +8,8 @@ use App\Models\Professor;
 use App\Models\Filiere;
 use App\Models\Module;
 use App\Models\Room;
+use App\Models\ModuleElement;
+use App\Models\Schedule;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Str;
@@ -31,58 +33,90 @@ class DatabaseSeeder extends Seeder
         $filiereGinf = Filiere::create(['name' => 'Génie Informatique', 'code' => 'GINF', 'duration_years' => 3]);
         $filiereMe = Filiere::create(['name' => 'Management des Entreprises', 'code' => 'ME', 'duration_years' => 3]);
 
-        // 3. Création des Modules (Basé sur l'emploi du temps GINF)
-        $modulesData = [
-            ['name' => 'Base de données SQL server', 'code' => 'SQL01', 'credits' => 6, 'hours' => 45, 'semester' => 6, 'filiere_id' => $filiereGinf->id],
-            ['name' => 'Projet (Gaming)', 'code' => 'PROJ01', 'credits' => 4, 'hours' => 30, 'semester' => 6, 'filiere_id' => $filiereGinf->id],
-            ['name' => 'Intelligence Artificielle 1', 'code' => 'IA01', 'credits' => 6, 'hours' => 40, 'semester' => 6, 'filiere_id' => $filiereGinf->id],
-            ['name' => 'Développement mobile', 'code' => 'MOB01', 'credits' => 6, 'hours' => 40, 'semester' => 6, 'filiere_id' => $filiereGinf->id],
-            ['name' => 'Programmation orientée objet JAVA 2', 'code' => 'JAVA02', 'credits' => 6, 'hours' => 45, 'semester' => 6, 'filiere_id' => $filiereGinf->id],
-            ['name' => 'Technologies web 2 (php & MySQL/Framework)', 'code' => 'WEB02', 'credits' => 6, 'hours' => 45, 'semester' => 6, 'filiere_id' => $filiereGinf->id],
-            ['name' => 'Anglais / Patrimoine artistique', 'code' => 'ANG01', 'credits' => 4, 'hours' => 30, 'semester' => 6, 'filiere_id' => $filiereGinf->id],
+        // 3. Création des Salles
+        $roomA37 = Room::create(['name' => 'Salle A37', 'code' => 'A37', 'type' => 'classroom', 'capacity' => 40, 'building' => 'Bloc A', 'floor' => 3]);
+        $roomE2 = Room::create(['name' => 'Amphi E2', 'code' => 'E2', 'type' => 'amphi', 'capacity' => 150, 'building' => 'Bloc E', 'floor' => 0]);
+
+        // 4. Création des Professeurs
+        $profData = [
+            'mejdoub' => ['first_name' => 'Soufyane', 'last_name' => 'MEJDOUB', 'speciality' => 'Base de données'],
+            'hajji' => ['first_name' => 'Tarik', 'last_name' => 'HAJJI', 'speciality' => 'Programmation/Gaming'],
+            'riffi' => ['first_name' => 'Jamal', 'last_name' => 'RIFFI', 'speciality' => 'Intelligence Artificielle'],
+            'belghini' => ['first_name' => 'Naouar', 'last_name' => 'BELGHINI', 'speciality' => 'Développement Mobile'],
+            'kzadri' => ['first_name' => 'Marwan', 'last_name' => 'KZADRI', 'speciality' => 'Technologies Web'],
+            'salim' => ['first_name' => 'Bouasria', 'last_name' => 'SALIM', 'speciality' => 'Anglais'],
+            'ouazzani' => ['first_name' => 'Lhoucine', 'last_name' => 'OUAZZANI', 'speciality' => 'Anglais/Patrimoine'],
         ];
 
-        foreach ($modulesData as $m) {
-            Module::create($m);
-        }
-
-        // 4. Création des Salles
-        Room::create(['name' => 'Salle A37', 'code' => 'A37', 'type' => 'classroom', 'capacity' => 40, 'building' => 'Bloc A', 'floor' => 3]);
-        Room::create(['name' => 'Amphi E2', 'code' => 'E2', 'type' => 'amphi', 'capacity' => 150, 'building' => 'Bloc E', 'floor' => 0]);
-
-        // 5. Professeurs de l'emploi du temps
-        $professorsFromSchedule = [
-            ['first_name' => 'Soufyane', 'last_name' => 'MEJDOUB', 'speciality' => 'Base de données'],
-            ['first_name' => 'Tarik', 'last_name' => 'HAJJI', 'speciality' => 'Programmation/Gaming'],
-            ['first_name' => 'Jamal', 'last_name' => 'RIFFI', 'speciality' => 'Intelligence Artificielle'],
-            ['first_name' => 'Naouar', 'last_name' => 'BELGHINI', 'speciality' => 'Développement Mobile'],
-            ['first_name' => 'Marwan', 'last_name' => 'KZADRI', 'speciality' => 'Technologies Web'],
-            ['first_name' => 'Bouasria', 'last_name' => 'SALIM', 'speciality' => 'Anglais'],
-            ['first_name' => 'Lhoucine', 'last_name' => 'OUAZZANI', 'speciality' => 'Anglais/Patrimoine'],
-        ];
-
-        foreach ($professorsFromSchedule as $p) {
+        $profs = [];
+        foreach ($profData as $key => $p) {
             $fullName = $p['first_name'] . ' ' . $p['last_name'];
-            $email = Str::slug($fullName, '.') . '@universite.com';
-
             $user = User::create([
                 'name' => $fullName,
-                'email' => $email,
+                'email' => Str::slug($fullName, '.') . '@universite.com',
                 'password' => Hash::make('password'),
                 'role' => 'professeur',
             ]);
 
-            Professor::create([
+            $profs[$key] = Professor::create([
                 'user_id' => $user->id,
                 'first_name' => $p['first_name'],
                 'last_name' => $p['last_name'],
-                'email' => $email,
+                'email' => $user->email,
                 'speciality' => $p['speciality'],
                 'hire_date' => now()->subYears(rand(1, 10)),
             ]);
         }
 
-        // 6. Liste des noms (Étudiants)
+        // 5. Création des Modules et Liaison avec Professeurs
+        $modules = [
+            'sql' => ['name' => 'Base de données SQL server', 'code' => 'SQL01', 'prof' => $profs['mejdoub']],
+            'gaming' => ['name' => 'Projet (Gaming)', 'code' => 'PROJ01', 'prof' => $profs['hajji']],
+            'ia' => ['name' => 'Intelligence Artificielle 1', 'code' => 'IA01', 'prof' => $profs['riffi']],
+            'mobile' => ['name' => 'Développement mobile', 'code' => 'MOB01', 'prof' => $profs['belghini']],
+            'java' => ['name' => 'Programmation orientée objet JAVA 2', 'code' => 'JAVA02', 'prof' => $profs['hajji']],
+            'web' => ['name' => 'Technologies web 2 (php & MySQL/Framework)', 'code' => 'WEB02', 'prof' => $profs['kzadri']],
+            'anglais' => ['name' => 'Anglais / Patrimoine artistique', 'code' => 'ANG01', 'prof' => $profs['salim']],
+        ];
+
+        foreach ($modules as $key => $data) {
+            $module = Module::create([
+                'name' => $data['name'],
+                'code' => $data['code'],
+                'credits' => rand(4, 8),
+                'hours' => rand(30, 50),
+                'semester' => 6,
+                'filiere_id' => $filiereGinf->id,
+                'is_active' => true,
+            ]);
+
+            // Liaison pivot
+            $module->professors()->attach($data['prof']->id, ['academic_year' => '2024-2025']);
+
+            // Création d'un élément de module pour pouvoir saisir des notes
+            ModuleElement::create([
+                'name' => 'Examen Final',
+                'code' => 'EX-' . $data['code'],
+                'coefficient' => 1.0,
+                'module_id' => $module->id,
+                'professor_id' => $data['prof']->id,
+            ]);
+
+            // Création d'un créneau d'emploi du temps (exemple)
+            Schedule::create([
+                'module_id' => $module->id,
+                'professor_id' => $data['prof']->id,
+                'room_id' => ($key === 'anglais' ? $roomE2->id : $roomA37->id),
+                'day' => ['Lundi', 'Mardi', 'Mercredi', 'Jeudi', 'Vendredi'][rand(0, 4)],
+                'start_time' => '08:30:00',
+                'end_time' => '10:30:00',
+                'type' => 'Cours',
+                'date' => now()->addDays(rand(1, 7)),
+                'academic_year' => '2024-2025',
+            ]);
+        }
+
+        // 6. Étudiants
         $names = [
             "Abdellah Bouabdli", "Ahmed El Kalai", "Er-Rajy Hanae", "Ibrahimi Hiba", "El Attar Soufi Rabie",
             "Bentaleb Chaymae", "Faridi Marwane", "Sahmoudi Aya", "Mendari Malak", "Boutarfass Kenza",
