@@ -61,7 +61,7 @@
                 @else
                     <a href="{{ route('login') }}"
                         class="px-8 py-3 rounded-2xl bg-[#4F46E5] text-white font-black text-sm shadow-xl shadow-indigo-100 hover:bg-[#4338CA] transition-all">
-                        Espace Membre
+                        Se connecter
                     </a>
                 @endauth
             </div>
@@ -98,7 +98,7 @@
             <div class="flex flex-col sm:flex-row items-center justify-start gap-6">
                 <a href="{{ route('login') }}"
                     class="w-full sm:w-auto px-10 py-5 rounded-2xl bg-[#4F46E5] text-white font-black text-lg shadow-2xl shadow-indigo-900/40 hover:scale-105 transition-all">
-                    Accéder à l'espace
+                    Se connecter
                 </a>
                 <a href="#features"
                     class="w-full sm:w-auto px-10 py-5 rounded-2xl bg-white/10 backdrop-blur-md border border-white/20 text-white font-black text-lg hover:bg-white/20 transition-all flex items-center justify-center gap-2">

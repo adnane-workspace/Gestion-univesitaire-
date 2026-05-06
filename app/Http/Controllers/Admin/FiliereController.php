@@ -80,9 +80,9 @@ class FiliereController extends Controller
 
     public function destroy(Filiere $filiere)
     {
-        if ($filiere->modules()->count() > 0 || $filiere->enrollments()->count() > 0) {
+        if ($filiere->modules()->count() > 0) {
             return redirect()->route('admin.filieres.index')
-                ->with('error', 'Impossible de supprimer cette filière car elle contient des modules ou des inscriptions');
+                ->with('error', 'Impossible de supprimer cette filière car elle contient des modules');
         }
 
         $filiere->delete();
