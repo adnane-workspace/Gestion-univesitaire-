@@ -35,6 +35,9 @@ class ProfesseurDashboardController extends Controller
     public function modules()
     {
         $professor = Auth::user()->professor;
+        if (!$professor) {
+            return redirect()->route('login')->with('error', 'Profil professeur non trouvé.');
+        }
         $modules = $professor->modules()->with(['filiere', 'moduleElements'])->get();
         return view('professeur.modules', compact('modules'));
     }
@@ -42,6 +45,9 @@ class ProfesseurDashboardController extends Controller
     public function grades(Request $request)
     {
         $professor = Auth::user()->professor;
+        if (!$professor) {
+            return redirect()->route('login')->with('error', 'Profil professeur non trouvé.');
+        }
         $modules = $professor->modules()->with('moduleElements')->get();
         
         $selectedModuleId = $request->input('module_id');
@@ -84,6 +90,9 @@ class ProfesseurDashboardController extends Controller
     public function schedule()
     {
         $professor = Auth::user()->professor;
+        if (!$professor) {
+            return redirect()->route('login')->with('error', 'Profil professeur non trouvé.');
+        }
         $schedules = $professor->schedules()
             ->with(['module', 'room'])
             ->orderBy('date')

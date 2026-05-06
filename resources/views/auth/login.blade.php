@@ -62,10 +62,7 @@
 
         <div class="text-center pt-6 border-t border-slate-50">
             <p class="text-sm font-bold text-slate-400">
-                Besoin d'un accès ? 
-                <a href="{{ route('register') }}" class="text-[#4F46E5] hover:underline">
-                    S'inscrire
-                </a>
+                Contactez l'administration pour obtenir vos identifiants.
             </p>
         </div>
     </form>

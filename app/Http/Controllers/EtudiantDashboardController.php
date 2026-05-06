@@ -10,6 +10,12 @@ class EtudiantDashboardController extends Controller
     public function index()
     {
         $student = Auth::user()->student;
+        
+        if (!$student) {
+            Auth::logout();
+            return redirect()->route('login')->with('error', 'Votre profil étudiant n\'est pas encore configuré. Contactez l\'administration.');
+        }
+
         return view('etudiant.dashboard', compact('student'));
     }
 
@@ -33,6 +39,10 @@ class EtudiantDashboardController extends Controller
     public function modules()
     {
         $student = Auth::user()->student;
+        if (!$student) {
+            Auth::logout();
+            return redirect()->route('login')->with('error', 'Votre profil étudiant n\'est pas configuré.');
+        }
         $modules = $student->filiere->modules()->with('professors')->get();
         return view('etudiant.modules', compact('modules'));
     }
@@ -40,6 +50,10 @@ class EtudiantDashboardController extends Controller
     public function schedule()
     {
         $student = Auth::user()->student;
+        if (!$student) {
+            Auth::logout();
+            return redirect()->route('login')->with('error', 'Votre profil étudiant n\'est pas configuré.');
+        }
         $schedules = \App\Models\Schedule::whereHas('module', function($q) use ($student) {
             $q->where('filiere_id', $student->filiere_id);
         })->with(['module', 'room', 'professor'])->orderBy('date')->orderBy('start_time')->get();

@@ -30,46 +30,168 @@
 @endsection
 
 @section('content')
-    <div class="bg-indigo-600 rounded-3xl p-8 text-white mb-8 shadow-xl shadow-indigo-200">
-        <h2 class="text-2xl font-bold mb-2">Bonjour, Prof. {{ $professor->first_name }} {{ $professor->last_name }} !</h2>
-        <p class="text-indigo-100">Vous avez {{ $schedulesCount }} cours prévus aujourd'hui.</p>
+    <!-- Welcome Header -->
+    <div class="relative overflow-hidden bg-slate-900 rounded-[2.5rem] p-10 mb-10 shadow-2xl">
+        <div class="relative z-10 flex flex-col md:flex-row justify-between items-center gap-8">
+            <div>
+                <h2 class="text-4xl font-black text-white mb-2">Bonjour, Prof. {{ $professor->last_name }} ! 👋</h2>
+                <p class="text-slate-400 text-lg font-medium">Prêt pour vos {{ $schedulesCount }} sessions d'aujourd'hui ?</p>
+                
+                <div class="flex gap-4 mt-8">
+                    <a href="{{ route('professeur.grades') }}" class="bg-indigo-600 hover:bg-indigo-700 text-white rounded-2xl px-8 py-3 font-bold text-sm transition-all shadow-xl shadow-indigo-900/20">
+                        Saisir des notes
+                    </a>
+                    <a href="{{ route('professeur.schedule') }}" class="bg-white/10 hover:bg-white/20 backdrop-blur-md text-white border border-white/10 rounded-2xl px-8 py-3 font-bold text-sm transition-all">
+                        Mon planning
+                    </a>
+                </div>
+            </div>
+            
+            <div class="flex gap-6">
+                <div class="bg-white/5 backdrop-blur-md rounded-[2rem] p-6 border border-white/10 text-center min-w-[140px]">
+                    <p class="text-[10px] font-black uppercase tracking-widest text-slate-500 mb-2">Étudiants</p>
+                    <p class="text-4xl font-black text-white">{{ $studentsCount }}</p>
+                </div>
+                <div class="bg-white/5 backdrop-blur-md rounded-[2rem] p-6 border border-white/10 text-center min-w-[140px]">
+                    <p class="text-[10px] font-black uppercase tracking-widest text-slate-500 mb-2">Modules</p>
+                    <p class="text-4xl font-black text-white">{{ $modules->count() }}</p>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Decoration -->
+        <div class="absolute top-0 right-0 -translate-y-1/2 translate-x-1/4 w-96 h-96 bg-indigo-500/10 rounded-full blur-3xl"></div>
     </div>
 
-    <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
-        <div class="bg-white rounded-3xl shadow-sm border border-slate-200 p-8">
-            <h3 class="font-bold text-slate-800 mb-6 flex items-center gap-2">
-                <span class="w-2 h-6 bg-indigo-600 rounded-full"></span>
-                Modules Assignés ({{ $modules->count() }})
-            </h3>
-            <div class="space-y-4">
-                @foreach($modules as $module)
-                    <div class="p-4 rounded-2xl bg-slate-50 border border-slate-100 flex items-center justify-between">
-                        <div>
-                            <p class="font-bold text-slate-800">{{ $module->name }}</p>
-                            <p class="text-xs text-slate-500 uppercase tracking-widest mt-1">{{ $module->filiere->name }} - S{{ $module->semester }}</p>
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-10">
+        <!-- Main Content -->
+        <div class="lg:col-span-2 space-y-10">
+            <!-- Today's Classes -->
+            <div class="bg-white rounded-[2.5rem] border border-slate-200/60 shadow-sm overflow-hidden">
+                <div class="px-8 py-6 border-b border-slate-100 flex items-center justify-between">
+                    <h3 class="text-xl font-bold text-slate-800">Prochaines sessions</h3>
+                    <span class="px-4 py-1 rounded-full bg-slate-100 text-slate-500 text-[10px] font-black uppercase tracking-widest">{{ now()->locale('fr')->isoFormat('dddd D MMMM') }}</span>
+                </div>
+                <div class="p-8">
+                    @php
+                        $today = \Carbon\Carbon::now()->locale('fr')->dayName;
+                        $todaySchedule = \App\Models\Schedule::where('professor_id', $professor->id)
+                            ->where('day', ucfirst($today))
+                            ->with(['module', 'room'])
+                            ->orderBy('start_time')
+                            ->get();
+                    @endphp
+
+                    @if($todaySchedule->isEmpty())
+                        <div class="py-20 text-center">
+                            <div class="w-20 h-20 bg-slate-50 rounded-full flex items-center justify-center mx-auto mb-6">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="h-10 w-10 text-slate-300" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                </svg>
+                            </div>
+                            <h4 class="text-lg font-bold text-slate-400">Aucun cours aujourd'hui</h4>
+                            <p class="text-sm text-slate-300 mt-2">Profitez de ce temps pour préparer vos prochains supports.</p>
                         </div>
-                        <span class="px-3 py-1 rounded-full bg-indigo-100 text-indigo-700 text-xs font-bold">{{ $module->is_active ? 'ACTIF' : 'INACTIF' }}</span>
-                    </div>
-                @endforeach
+                    @else
+                        <div class="space-y-6">
+                            @foreach($todaySchedule as $item)
+                                <div class="relative group p-6 rounded-[2rem] bg-slate-50 border border-slate-100 hover:bg-white hover:border-indigo-100 transition-all hover:shadow-xl hover:shadow-indigo-50">
+                                    <div class="flex items-center gap-6">
+                                        <div class="bg-white p-4 rounded-2xl shadow-sm group-hover:bg-indigo-600 group-hover:text-white transition-all">
+                                            <p class="text-lg font-black">{{ \Carbon\Carbon::parse($item->start_time)->format('H:i') }}</p>
+                                        </div>
+                                        <div class="flex-1">
+                                            <h4 class="font-black text-slate-800 text-lg">{{ $item->module->name }}</h4>
+                                            <div class="flex items-center gap-4 mt-1">
+                                                <span class="flex items-center gap-1 text-xs font-bold text-slate-400">
+                                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+                                                    </svg>
+                                                    {{ $item->room->name }}
+                                                </span>
+                                                <span class="px-2 py-0.5 rounded-md bg-indigo-50 text-indigo-600 text-[10px] font-black uppercase tracking-widest">{{ $item->type }}</span>
+                                            </div>
+                                        </div>
+                                        <a href="{{ route('professeur.grades', ['module_id' => $item->module_id]) }}" class="hidden md:flex items-center gap-2 px-6 py-3 rounded-xl bg-white border border-slate-200 text-sm font-bold text-slate-600 hover:bg-slate-900 hover:text-white transition-all shadow-sm">
+                                            Liste d'appel
+                                        </a>
+                                    </div>
+                                </div>
+                            @endforeach
+                        </div>
+                    @endif
+                </div>
+            </div>
+
+            <!-- Modules Grid -->
+            <div class="bg-white rounded-[2.5rem] border border-slate-200/60 shadow-sm p-8">
+                <h3 class="text-xl font-bold text-slate-800 mb-8 flex items-center justify-between">
+                    Mes Modules d'Enseignement
+                    <a href="{{ route('professeur.modules') }}" class="text-sm text-indigo-600 hover:underline">Voir détails</a>
+                </h3>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    @foreach($modules as $module)
+                        <div class="p-6 rounded-[2rem] border border-slate-100 bg-slate-50/50 hover:border-indigo-100 transition-all group">
+                            <div class="flex items-center justify-between mb-4">
+                                <span class="px-3 py-1 rounded-full bg-white border border-slate-200 text-[10px] font-black text-slate-500">{{ $module->code }}</span>
+                                <div class="w-8 h-8 rounded-xl bg-white flex items-center justify-center text-slate-400 group-hover:text-indigo-600 transition-colors">
+                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
+                                    </svg>
+                                </div>
+                            </div>
+                            <h4 class="font-black text-slate-800 mb-1 leading-tight">{{ $module->name }}</h4>
+                            <p class="text-xs font-bold text-slate-400 uppercase tracking-widest">{{ $module->filiere->name }}</p>
+                        </div>
+                    @endforeach
+                </div>
             </div>
         </div>
 
-        <div class="bg-white rounded-3xl shadow-sm border border-slate-200 p-8">
-            <h3 class="font-bold text-slate-800 mb-6 flex items-center gap-2">
-                <span class="w-2 h-6 bg-emerald-500 rounded-full"></span>
-                Statistiques Rapides
-            </h3>
-            <div class="grid grid-cols-2 gap-4">
-                <div class="p-6 rounded-2xl bg-emerald-50 border border-emerald-100">
-                    <p class="text-3xl font-bold text-emerald-600">{{ $studentsCount }}</p>
-                    <p class="text-sm text-slate-600 mt-1">Étudiants suivis</p>
+        <!-- Sidebar Widgets -->
+        <div class="space-y-10">
+            <!-- Stats Circular -->
+            <div class="bg-white rounded-[2.5rem] border border-slate-200/60 shadow-sm p-10 text-center">
+                <div class="relative w-40 h-40 mx-auto mb-8">
+                    <svg class="w-full h-full" viewBox="0 0 36 36">
+                        <path class="text-slate-100" stroke-width="3" stroke="currentColor" fill="none" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" />
+                        <path class="text-indigo-600" stroke-dasharray="85, 100" stroke-width="3" stroke-linecap="round" stroke="currentColor" fill="none" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" />
+                    </svg>
+                    <div class="absolute inset-0 flex flex-col items-center justify-center">
+                        <p class="text-4xl font-black text-slate-800">85%</p>
+                        <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Saisie Notes</p>
+                    </div>
                 </div>
-                <div class="p-6 rounded-2xl bg-blue-50 border border-blue-100">
-                    <p class="text-3xl font-bold text-blue-600">{{ $modules->sum('credits') }}</p>
-                    <p class="text-sm text-slate-600 mt-1">Crédits totaux</p>
+                <h4 class="font-bold text-slate-800">Progression semestrielle</h4>
+                <p class="text-sm text-slate-400 mt-2">Vous avez presque terminé la saisie de toutes les notes pour vos modules.</p>
+            </div>
+
+            <!-- Academic Calendar -->
+            <div class="bg-indigo-600 rounded-[2.5rem] p-8 text-white shadow-xl shadow-indigo-200">
+                <h4 class="font-black text-lg mb-6">Dates Clés</h4>
+                <div class="space-y-6">
+                    <div class="flex gap-4">
+                        <div class="w-12 h-12 rounded-2xl bg-white/10 flex flex-col items-center justify-center border border-white/10">
+                            <span class="text-xs font-black">15</span>
+                            <span class="text-[8px] uppercase font-bold text-indigo-200">Mai</span>
+                        </div>
+                        <div>
+                            <p class="text-sm font-bold">Rendu des notes</p>
+                            <p class="text-xs text-indigo-200">Date limite semestre 2</p>
+                        </div>
+                    </div>
+                    <div class="flex gap-4">
+                        <div class="w-12 h-12 rounded-2xl bg-white/10 flex flex-col items-center justify-center border border-white/10">
+                            <span class="text-xs font-black">22</span>
+                            <span class="text-[8px] uppercase font-bold text-indigo-200">Mai</span>
+                        </div>
+                        <div>
+                            <p class="text-sm font-bold">Conseil de classe</p>
+                            <p class="text-xs text-indigo-200">Session normale GINF</p>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
     </div>
 @endsection
-
