@@ -102,14 +102,22 @@ class DatabaseSeeder extends Seeder
                 'professor_id' => $data['prof']->id,
             ]);
 
-            // Création d'un créneau d'emploi du temps (exemple)
+            // Création d'un créneau d'emploi du temps (exemple avec créneaux variés)
+            $slots = [
+                ['08:30:00', '10:30:00'],
+                ['10:45:00', '12:45:00'],
+                ['14:00:00', '16:00:00'],
+                ['16:15:00', '18:15:00']
+            ];
+            $selectedSlot = $slots[rand(0, 3)];
+
             Schedule::create([
                 'module_id' => $module->id,
                 'professor_id' => $data['prof']->id,
                 'room_id' => ($key === 'anglais' ? $roomE2->id : $roomA37->id),
                 'day' => ['Lundi', 'Mardi', 'Mercredi', 'Jeudi', 'Vendredi'][rand(0, 4)],
-                'start_time' => '08:30:00',
-                'end_time' => '10:30:00',
+                'start_time' => $selectedSlot[0],
+                'end_time' => $selectedSlot[1],
                 'type' => 'Cours',
                 'date' => now()->addDays(rand(1, 7)),
                 'academic_year' => '2024-2025',

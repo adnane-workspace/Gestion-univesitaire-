@@ -29,4 +29,21 @@ class EtudiantDashboardController extends Controller
 
         return view('etudiant.grades', compact('grades'));
     }
+
+    public function modules()
+    {
+        $student = Auth::user()->student;
+        $modules = $student->filiere->modules()->with('professors')->get();
+        return view('etudiant.modules', compact('modules'));
+    }
+
+    public function schedule()
+    {
+        $student = Auth::user()->student;
+        $schedules = \App\Models\Schedule::whereHas('module', function($q) use ($student) {
+            $q->where('filiere_id', $student->filiere_id);
+        })->with(['module', 'room', 'professor'])->orderBy('date')->orderBy('start_time')->get();
+
+        return view('etudiant.schedule', compact('schedules'));
+    }
 }
