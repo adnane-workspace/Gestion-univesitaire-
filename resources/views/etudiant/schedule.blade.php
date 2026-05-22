@@ -30,78 +30,238 @@
 @endsection
 
 @section('content')
-    <div class="mb-8">
-        <h2 class="text-3xl font-bold text-slate-800">Emploi du temps</h2>
-        <p class="text-slate-500 mt-2">Votre planning de cours pour la semaine en cours.</p>
+
+@php
+    $days        = ['Lundi', 'Mardi', 'Mercredi', 'Jeudi', 'Vendredi', 'Samedi'];
+    $today       = ucfirst(\Carbon\Carbon::now()->locale('fr')->dayName);
+
+    // Build sorted unique time-slot keys: "08:30-10:00"
+    $timeSlots = $schedules->map(function($s) {
+        return \Carbon\Carbon::parse($s->start_time)->format('H:i')
+             . '|'
+             . \Carbon\Carbon::parse($s->end_time)->format('H:i');
+    })->unique()->sort()->values();
+
+    // Build matrix [timeKey][day] = schedule item
+    $matrix = [];
+    foreach ($schedules as $s) {
+        $key = \Carbon\Carbon::parse($s->start_time)->format('H:i')
+             . '|'
+             . \Carbon\Carbon::parse($s->end_time)->format('H:i');
+        $matrix[$key][$s->day] = $s;
+    }
+    ksort($matrix);
+
+    // Assign a consistent color to each unique module
+    $palette = [
+        ['dot'=>'bg-indigo-500',   'card'=>'bg-indigo-50',   'text'=>'text-indigo-800',   'sub'=>'text-indigo-500',   'border'=>'border-indigo-200',   'badge'=>'bg-indigo-100 text-indigo-700'],
+        ['dot'=>'bg-violet-500',   'card'=>'bg-violet-50',   'text'=>'text-violet-800',   'sub'=>'text-violet-500',   'border'=>'border-violet-200',   'badge'=>'bg-violet-100 text-violet-700'],
+        ['dot'=>'bg-emerald-500',  'card'=>'bg-emerald-50',  'text'=>'text-emerald-800',  'sub'=>'text-emerald-600',  'border'=>'border-emerald-200',  'badge'=>'bg-emerald-100 text-emerald-700'],
+        ['dot'=>'bg-amber-500',    'card'=>'bg-amber-50',    'text'=>'text-amber-800',    'sub'=>'text-amber-600',    'border'=>'border-amber-200',    'badge'=>'bg-amber-100 text-amber-700'],
+        ['dot'=>'bg-rose-500',     'card'=>'bg-rose-50',     'text'=>'text-rose-800',     'sub'=>'text-rose-500',     'border'=>'border-rose-200',     'badge'=>'bg-rose-100 text-rose-700'],
+        ['dot'=>'bg-cyan-500',     'card'=>'bg-cyan-50',     'text'=>'text-cyan-800',     'sub'=>'text-cyan-600',     'border'=>'border-cyan-200',     'badge'=>'bg-cyan-100 text-cyan-700'],
+        ['dot'=>'bg-fuchsia-500',  'card'=>'bg-fuchsia-50',  'text'=>'text-fuchsia-800',  'sub'=>'text-fuchsia-500',  'border'=>'border-fuchsia-200',  'badge'=>'bg-fuchsia-100 text-fuchsia-700'],
+        ['dot'=>'bg-teal-500',     'card'=>'bg-teal-50',     'text'=>'text-teal-800',     'sub'=>'text-teal-600',     'border'=>'border-teal-200',     'badge'=>'bg-teal-100 text-teal-700'],
+    ];
+    $moduleColors = [];
+    $ci = 0;
+    foreach ($schedules as $s) {
+        $name = $s->module->name;
+        if (!isset($moduleColors[$name])) {
+            $moduleColors[$name] = $palette[$ci % count($palette)];
+            $ci++;
+        }
+    }
+
+    // Days that actually have courses (to filter empty columns)
+    $activeDays = $schedules->pluck('day')->unique()->toArray();
+@endphp
+
+{{-- ═══════════════════════════════════════════════ PAGE HEADER --}}
+<div class="mb-6 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+    <div>
+        <h2 class="text-3xl font-black text-slate-800 tracking-tight">Emploi du temps</h2>
+        <p class="text-slate-500 mt-1 text-sm font-medium">
+            Semaine en cours &bull;
+            @if(isset($student) && $student->filiere)
+                <span class="font-semibold text-indigo-600">{{ $student->filiere->name }}</span>
+            @endif
+        </p>
     </div>
 
-    @if($schedules->isEmpty())
-        <div class="text-center py-32 bg-white rounded-[3rem] border-4 border-dashed border-slate-100">
-            <div class="w-24 h-24 bg-slate-50 rounded-full flex items-center justify-center mx-auto mb-6">
-                <svg xmlns="http://www.w3.org/2000/svg" class="h-12 w-12 text-slate-300" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                </svg>
-            </div>
-            <h3 class="text-xl font-bold text-slate-400">Aucun cours planifié</h3>
-            <p class="text-slate-300 mt-2">Votre emploi du temps n'a pas encore été généré par l'administration.</p>
-        </div>
-    @else
-        <div class="grid grid-cols-1 gap-8">
-            @php
-                $groupedSchedules = $schedules->groupBy('day');
-                $days = ['Lundi', 'Mardi', 'Mercredi', 'Jeudi', 'Vendredi', 'Samedi'];
-            @endphp
+    {{-- Legend --}}
+    @if(!$schedules->isEmpty())
+    <div class="flex flex-wrap gap-2">
+        @foreach($moduleColors as $modName => $c)
+        <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold {{ $c['badge'] }}">
+            <span class="w-2 h-2 rounded-full {{ $c['dot'] }}"></span>
+            {{ Str::limit($modName, 24) }}
+        </span>
+        @endforeach
+    </div>
+    @endif
+</div>
 
-            @foreach($days as $day)
-                @if(isset($groupedSchedules[$day]))
-                    <div class="space-y-4">
-                        <div class="flex items-center gap-4">
-                            <div class="px-6 py-2 rounded-2xl bg-indigo-600 text-white font-bold text-sm shadow-lg shadow-indigo-100">
-                                {{ $day }}
-                            </div>
-                            <div class="h-px flex-1 bg-slate-100"></div>
+@if($schedules->isEmpty())
+{{-- ═══════════════════════════════════════════════ EMPTY STATE --}}
+<div class="text-center py-32 bg-white rounded-[3rem] border-4 border-dashed border-slate-100">
+    <div class="w-24 h-24 bg-slate-50 rounded-full flex items-center justify-center mx-auto mb-6">
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-12 w-12 text-slate-300" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+        </svg>
+    </div>
+    <h3 class="text-xl font-bold text-slate-400">Aucun cours planifié</h3>
+    <p class="text-slate-300 mt-2 text-sm">Votre emploi du temps n'a pas encore été généré par l'administration.</p>
+</div>
+
+@else
+{{-- ═══════════════════════════════════════════════ WEEKLY GRID --}}
+<div class="overflow-x-auto rounded-3xl shadow-lg border border-slate-100">
+    <table class="w-full min-w-[760px] border-collapse bg-white">
+
+        {{-- ── Column headers (days) ── --}}
+        <thead>
+            <tr>
+                {{-- Time column header --}}
+                <th class="w-28 px-4 py-4 bg-gradient-to-br from-slate-800 to-slate-900 text-slate-300 text-xs font-bold uppercase tracking-widest text-center border-r border-slate-700 rounded-tl-3xl">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mx-auto mb-1 opacity-50" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    </svg>
+                    Horaire
+                </th>
+
+                @foreach($days as $day)
+                @php $isToday = ($day === $today); $hasAny = in_array($day, $activeDays); @endphp
+                <th class="px-3 py-4 text-center text-sm font-black border-r border-slate-100 last:border-r-0 last:rounded-tr-3xl
+                    {{ $isToday
+                        ? 'bg-gradient-to-b from-indigo-600 to-indigo-700 text-white shadow-inner'
+                        : ($hasAny ? 'bg-gradient-to-br from-slate-800 to-slate-900 text-slate-200' : 'bg-gradient-to-br from-slate-800 to-slate-900 text-slate-500') }}">
+                    {{ $day }}
+                    @if($isToday)
+                        <span class="flex items-center justify-center gap-1 mt-1">
+                            <span class="relative flex h-2 w-2">
+                                <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-white opacity-75"></span>
+                                <span class="relative inline-flex rounded-full h-2 w-2 bg-white"></span>
+                            </span>
+                            <span class="text-[10px] font-semibold opacity-90">Aujourd'hui</span>
+                        </span>
+                    @endif
+                </th>
+                @endforeach
+            </tr>
+        </thead>
+
+        {{-- ── Rows (time slots) ── --}}
+        <tbody>
+            @foreach($matrix as $slotKey => $dayMap)
+            @php
+                [$slotStart, $slotEnd] = explode('|', $slotKey);
+                $isLastRow = ($loop->last);
+            @endphp
+            <tr class="border-b border-slate-100 {{ $isLastRow ? 'last:border-b-0' : '' }}">
+
+                {{-- Time label cell --}}
+                <td class="px-4 py-3 border-r border-slate-100 bg-slate-50 text-center {{ $isLastRow ? 'rounded-bl-3xl' : '' }}">
+                    <span class="block text-base font-black text-indigo-600 leading-none">{{ $slotStart }}</span>
+                    <span class="block text-xs text-slate-400 font-semibold mt-1">{{ $slotEnd }}</span>
+                </td>
+
+                {{-- Day cells --}}
+                @foreach($days as $dayIdx => $day)
+                @php
+                    $course  = $dayMap[$day] ?? null;
+                    $isToday = ($day === $today);
+                    $isLast  = ($dayIdx === count($days) - 1);
+                @endphp
+                <td class="p-2 border-r border-slate-100 {{ $isLast ? 'border-r-0' : '' }} {{ $isLast && $isLastRow ? 'rounded-br-3xl' : '' }}
+                    {{ $isToday ? 'bg-indigo-50/40' : 'bg-white' }}" style="min-width:130px;">
+
+                    @if($course)
+                    @php $c = $moduleColors[$course->module->name]; @endphp
+                    <div class="group relative {{ $c['card'] }} {{ $c['border'] }} border rounded-2xl p-3 hover:shadow-md hover:-translate-y-0.5 transition-all duration-200 cursor-default h-full">
+                        {{-- Colored left accent --}}
+                        <div class="absolute left-0 top-3 bottom-3 w-1 rounded-r-full {{ $c['dot'] }}"></div>
+
+                        {{-- Module name --}}
+                        <p class="text-xs font-black {{ $c['text'] }} leading-snug pl-2 mb-2">{{ $course->module->name }}</p>
+
+                        {{-- Room --}}
+                        <div class="flex items-center gap-1 pl-2 mb-1">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-3 w-3 {{ $c['sub'] }} shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/>
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/>
+                            </svg>
+                            <span class="text-[11px] font-semibold {{ $c['sub'] }}">{{ $course->room->name }}</span>
                         </div>
 
-                        <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
-                            @foreach($groupedSchedules[$day] as $item)
-                                <div class="bg-white rounded-[2rem] border border-slate-100 p-6 shadow-sm hover:shadow-md transition-all flex items-center gap-6 relative overflow-hidden group">
-                                    <div class="absolute top-0 right-0 p-4 opacity-5 pointer-events-none group-hover:scale-110 transition-transform">
-                                        <svg xmlns="http://www.w3.org/2000/svg" class="h-16 w-16 text-indigo-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-                                        </svg>
-                                    </div>
-                                    
-                                    <div class="text-center min-w-[70px] py-2 border-r border-slate-100 pr-6">
-                                        <p class="text-lg font-black text-indigo-600">{{ \Carbon\Carbon::parse($item->start_time)->format('H:i') }}</p>
-                                        <p class="text-xs font-bold text-slate-400 mt-1 uppercase">{{ \Carbon\Carbon::parse($item->end_time)->format('H:i') }}</p>
-                                    </div>
-
-                                    <div class="flex-1">
-                                        <h4 class="font-bold text-slate-800 text-lg leading-tight mb-1">{{ $item->module->name }}</h4>
-                                        <div class="flex flex-wrap gap-x-4 gap-y-1">
-                                            <p class="text-xs font-semibold text-slate-400 flex items-center gap-1">
-                                                <svg xmlns="http://www.w3.org/2000/svg" class="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
-                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
-                                                </svg>
-                                                {{ $item->room->name }}
-                                            </p>
-                                            <p class="text-xs font-semibold text-indigo-400 flex items-center gap-1">
-                                                <svg xmlns="http://www.w3.org/2000/svg" class="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
-                                                </svg>
-                                                Prof. {{ $item->professor->last_name }}
-                                            </p>
-                                        </div>
-                                    </div>
-                                    
-                                    <div class="absolute left-0 top-0 bottom-0 w-1.5 bg-indigo-500"></div>
-                                </div>
-                            @endforeach
+                        {{-- Professor --}}
+                        <div class="flex items-center gap-1 pl-2">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-3 w-3 {{ $c['sub'] }} shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/>
+                            </svg>
+                            <span class="text-[11px] font-semibold {{ $c['sub'] }}">Pr. {{ $course->professor->last_name }}</span>
                         </div>
                     </div>
-                @endif
+
+                    @else
+                    {{-- Empty cell --}}
+                    <div class="min-h-[80px] rounded-2xl
+                        {{ $isToday ? 'border border-dashed border-indigo-200 bg-indigo-50/20' : 'border border-dashed border-slate-100' }}
+                        flex items-center justify-center">
+                        <span class="{{ $isToday ? 'text-indigo-200' : 'text-slate-200' }} text-xs select-none">—</span>
+                    </div>
+                    @endif
+
+                </td>
+                @endforeach
+            </tr>
             @endforeach
+        </tbody>
+    </table>
+</div>
+
+{{-- ═══════════════════════════════════════════════ TODAY'S SUMMARY CARD --}}
+@php
+    $todayCourses = $schedules->where('day', $today)->sortBy('start_time');
+@endphp
+@if($todayCourses->isNotEmpty())
+<div class="mt-8">
+    <div class="flex items-center gap-3 mb-4">
+        <div class="w-2 h-2 rounded-full bg-indigo-500 animate-pulse"></div>
+        <h3 class="text-lg font-black text-slate-800">Aujourd'hui · <span class="text-indigo-600">{{ $today }}</span></h3>
+        <div class="flex-1 h-px bg-slate-100"></div>
+        <span class="text-xs font-bold text-slate-400 bg-slate-100 px-3 py-1 rounded-full">{{ $todayCourses->count() }} cours</span>
+    </div>
+    <div class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-4">
+        @foreach($todayCourses as $item)
+        @php $c = $moduleColors[$item->module->name]; @endphp
+        <div class="bg-white rounded-2xl border {{ $c['border'] }} p-5 shadow-sm hover:shadow-md transition-all group relative overflow-hidden">
+            {{-- Background decoration --}}
+            <div class="absolute -right-4 -bottom-4 w-20 h-20 rounded-full opacity-5 {{ $c['dot'] }}"></div>
+            <div class="flex items-start justify-between mb-3">
+                <div class="flex items-center gap-2">
+                    <span class="w-3 h-3 rounded-full {{ $c['dot'] }} shadow-sm"></span>
+                    <span class="text-xs font-black {{ $c['text'] }} uppercase tracking-wider">
+                        {{ \Carbon\Carbon::parse($item->start_time)->format('H:i') }}
+                        –
+                        {{ \Carbon\Carbon::parse($item->end_time)->format('H:i') }}
+                    </span>
+                </div>
+                <span class="text-[10px] font-bold {{ $c['badge'] }} px-2 py-0.5 rounded-full">{{ $item->room->name }}</span>
+            </div>
+            <h4 class="font-black text-slate-800 text-sm leading-snug mb-2">{{ $item->module->name }}</h4>
+            <p class="text-xs font-semibold text-slate-500 flex items-center gap-1">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-3.5 w-3.5 {{ $c['sub'] }}" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/>
+                </svg>
+                Prof. {{ $item->professor->first_name }} {{ $item->professor->last_name }}
+            </p>
         </div>
-    @endif
+        @endforeach
+    </div>
+</div>
+@endif
+
+@endif {{-- end !empty --}}
+
 @endsection

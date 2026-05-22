@@ -22,20 +22,21 @@ class DatabaseSeeder extends Seeder
     public function run(): void
     {
         // 1. Administrateur par défaut
-        User::create([
-            'name' => 'Administrateur',
+        User::firstOrCreate([
             'email' => 'admin@universite.com',
+        ], [
+            'name' => 'Administrateur',
             'password' => Hash::make('password'),
             'role' => 'admin',
         ]);
 
         // 2. Création des Filières
-        $filiereGinf = Filiere::create(['name' => 'Génie Informatique', 'code' => 'GINF', 'duration_years' => 3]);
-        $filiereMe = Filiere::create(['name' => 'Management des Entreprises', 'code' => 'ME', 'duration_years' => 3]);
+        $filiereGinf = Filiere::firstOrCreate(['code' => 'GINF'], ['name' => 'Génie Informatique', 'duration_years' => 3]);
+        $filiereMe = Filiere::firstOrCreate(['code' => 'ME'], ['name' => 'Management des Entreprises', 'duration_years' => 3]);
 
         // 3. Création des Salles
-        $roomA37 = Room::create(['name' => 'Salle A37', 'code' => 'A37', 'type' => 'classroom', 'capacity' => 40, 'building' => 'Bloc A', 'floor' => 3]);
-        $roomE2 = Room::create(['name' => 'Amphi E2', 'code' => 'E2', 'type' => 'amphi', 'capacity' => 150, 'building' => 'Bloc E', 'floor' => 0]);
+        $roomA37 = Room::firstOrCreate(['code' => 'A37'], ['name' => 'Salle A37', 'type' => 'classroom', 'capacity' => 40, 'building' => 'Bloc A', 'floor' => 3]);
+        $roomE2 = Room::firstOrCreate(['code' => 'E2'], ['name' => 'Amphi E2', 'type' => 'amphi', 'capacity' => 150, 'building' => 'Bloc E', 'floor' => 0]);
 
         // 4. Création des Professeurs
         $profData = [
@@ -51,18 +52,17 @@ class DatabaseSeeder extends Seeder
         $profs = [];
         foreach ($profData as $key => $p) {
             $fullName = $p['first_name'] . ' ' . $p['last_name'];
-            $user = User::create([
+            $email = Str::slug($fullName, '.') . '@universite.com';
+            $user = User::firstOrCreate(['email' => $email], [
                 'name' => $fullName,
-                'email' => Str::slug($fullName, '.') . '@universite.com',
                 'password' => Hash::make('password'),
                 'role' => 'professeur',
             ]);
 
-            $profs[$key] = Professor::create([
+            $profs[$key] = Professor::firstOrCreate(['email' => $user->email], [
                 'user_id' => $user->id,
                 'first_name' => $p['first_name'],
                 'last_name' => $p['last_name'],
-                'email' => $user->email,
                 'speciality' => $p['speciality'],
                 'hire_date' => now()->subYears(rand(1, 10)),
             ]);
@@ -80,9 +80,8 @@ class DatabaseSeeder extends Seeder
         ];
 
         foreach ($modules as $key => $data) {
-            $module = Module::create([
+            $module = Module::firstOrCreate(['code' => $data['code']], [
                 'name' => $data['name'],
-                'code' => $data['code'],
                 'credits' => rand(4, 8),
                 'hours' => rand(30, 50),
                 'semester' => 6,
@@ -90,13 +89,12 @@ class DatabaseSeeder extends Seeder
                 'is_active' => true,
             ]);
 
-            // Liaison pivot
-            $module->professors()->attach($data['prof']->id, ['academic_year' => '2024-2025']);
+            // Liaison pivot (éviter doublons)
+            $module->professors()->syncWithoutDetaching([$data['prof']->id => ['academic_year' => '2024-2025']]);
 
             // Création d'un élément de module pour pouvoir saisir des notes
-            ModuleElement::create([
+            ModuleElement::firstOrCreate(['code' => 'EX-' . $data['code']], [
                 'name' => 'Examen Final',
-                'code' => 'EX-' . $data['code'],
                 'coefficient' => 1.0,
                 'module_id' => $module->id,
                 'professor_id' => $data['prof']->id,
@@ -111,13 +109,14 @@ class DatabaseSeeder extends Seeder
             ];
             $selectedSlot = $slots[rand(0, 3)];
 
-            Schedule::create([
+            Schedule::firstOrCreate([
                 'module_id' => $module->id,
+                'start_time' => $selectedSlot[0],
+                'end_time' => $selectedSlot[1],
+            ], [
                 'professor_id' => $data['prof']->id,
                 'room_id' => ($key === 'anglais' ? $roomE2->id : $roomA37->id),
                 'day' => ['Lundi', 'Mardi', 'Mercredi', 'Jeudi', 'Vendredi'][rand(0, 4)],
-                'start_time' => $selectedSlot[0],
-                'end_time' => $selectedSlot[1],
                 'type' => 'Cours',
                 'date' => now()->addDays(rand(1, 7)),
                 'academic_year' => '2024-2025',
@@ -142,15 +141,13 @@ class DatabaseSeeder extends Seeder
             $lastName = isset($parts[1]) ? implode(' ', array_slice($parts, 1)) : 'Student';
             $email = Str::slug($fullName, '.') . '@student.com';
 
-            $user = User::create([
+            $user = User::firstOrCreate(['email' => $email], [
                 'name' => $fullName,
-                'email' => $email,
                 'password' => Hash::make('password'),
                 'role' => 'etudiant',
             ]);
 
-            Student::create([
-                'user_id' => $user->id,
+            Student::firstOrCreate(['user_id' => $user->id], [
                 'filiere_id' => $filiereGinf->id,
                 'first_name' => $firstName,
                 'last_name' => $lastName,

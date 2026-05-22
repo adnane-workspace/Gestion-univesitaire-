@@ -185,6 +185,28 @@
                 </div>
             </div>
 
+            <!-- Infos Pratiques & Support -->
+            <div class="bg-gradient-to-br from-slate-900 to-indigo-950 rounded-[2.5rem] p-8 text-white relative overflow-hidden shadow-xl">
+                <div class="absolute -right-10 -bottom-10 w-40 h-40 bg-indigo-500/10 rounded-full blur-2xl"></div>
+                <h3 class="text-xs font-black uppercase tracking-widest text-indigo-300 mb-2">Guide de l'Étudiant</h3>
+                <h4 class="text-lg font-black mb-3 flex items-center gap-2">
+                    🎓 Besoin d'une information ?
+                </h4>
+                <p class="text-xs text-slate-400 leading-relaxed mb-6">
+                    Accédez en temps réel à votre planning, vos notes et vos absences depuis votre portail. Pour toute autre question, votre assistant virtuel intelligent est disponible en bas à droite !
+                </p>
+                <div class="space-y-3">
+                    <div class="flex items-center gap-3 text-[10px] font-bold text-slate-300 bg-white/5 border border-white/10 p-3 rounded-2xl">
+                        <span>📌</span>
+                        <span>Bureau de scolarité ouvert de 08:30 à 17:00</span>
+                    </div>
+                    <div class="flex items-center gap-3 text-[10px] font-bold text-slate-300 bg-white/5 border border-white/10 p-3 rounded-2xl">
+                        <span>📞</span>
+                        <span>Contact direct : contact.scolarite@upf.ma</span>
+                    </div>
+                </div>
+            </div>
+
             <!-- Quick Stats -->
             <div class="bg-slate-900 rounded-[2.5rem] p-8 text-white">
                 <h4 class="font-black text-lg mb-6">Récapitulatif</h4>

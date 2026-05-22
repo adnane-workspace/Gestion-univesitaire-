@@ -13,6 +13,7 @@
     <link
         href="https://fonts.googleapis.com/css2?family=Geist:wght@100..900&family=Inter:wght@400;500;600;700&display=swap"
         rel="stylesheet">
+    <meta name="csrf-token" content="{{ csrf_token() }}">
     <style>
         body {
             font-family: 'Geist', 'Inter', sans-serif;
@@ -30,6 +31,7 @@
             box-shadow: inset 4px 0 0 #4F46E5;
         }
     </style>
+    @vite(['resources/js/app.js'])
 </head>
 
 <body class="h-full">
@@ -99,6 +101,63 @@
             </div>
         </main>
     </div>
+    @if(Auth::check() && Auth::user()->role === 'etudiant')
+        <!-- Floating Chatbot Toggle Button & Widget -->
+        <div class="fixed bottom-6 right-6 z-50 flex flex-col items-end gap-3" id="chatbot-floating-container">
+            <!-- Chatbot box -->
+            <div id="chatbot-box" class="hidden w-[480px] max-w-[calc(100vw-2rem)] bg-white/95 backdrop-blur-md rounded-[2.5rem] border border-slate-200/50 shadow-2xl overflow-hidden transition-all duration-300 transform scale-95 opacity-0 origin-bottom-right">
+                <div id="app"></div>
+            </div>
+            
+            <!-- Toggle Button -->
+            <button id="chatbot-toggle-btn" class="w-14 h-14 rounded-full bg-indigo-600 hover:bg-indigo-700 text-white flex items-center justify-center shadow-lg shadow-indigo-200 hover:shadow-indigo-300 transition-all hover:scale-105 active:scale-95 cursor-pointer relative group">
+                <!-- Unread pulse -->
+                <span class="absolute -top-0.5 -right-0.5 flex h-3.5 w-3.5">
+                    <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+                    <span class="relative inline-flex rounded-full h-3.5 w-3.5 bg-emerald-500 border-2 border-white"></span>
+                </span>
+                <!-- Chat bubble icon -->
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 transition-all duration-300" id="chatbot-icon-open" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z" />
+                </svg>
+                <!-- Close icon -->
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 hidden transition-all duration-300" id="chatbot-icon-close" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                </svg>
+            </button>
+        </div>
+        
+        <script>
+            document.addEventListener('DOMContentLoaded', function() {
+                const toggleBtn = document.getElementById('chatbot-toggle-btn');
+                const chatBox = document.getElementById('chatbot-box');
+                const iconOpen = document.getElementById('chatbot-icon-open');
+                const iconClose = document.getElementById('chatbot-icon-close');
+                
+                toggleBtn.addEventListener('click', function() {
+                    if (chatBox.classList.contains('hidden')) {
+                        // Show
+                        chatBox.classList.remove('hidden');
+                        setTimeout(() => {
+                            chatBox.classList.remove('scale-95', 'opacity-0');
+                            chatBox.classList.add('scale-100', 'opacity-100');
+                        }, 20);
+                        iconOpen.classList.add('hidden');
+                        iconClose.classList.remove('hidden');
+                    } else {
+                        // Hide
+                        chatBox.classList.remove('scale-100', 'opacity-100');
+                        chatBox.classList.add('scale-95', 'opacity-0');
+                        setTimeout(() => {
+                            chatBox.classList.add('hidden');
+                        }, 300);
+                        iconOpen.classList.remove('hidden');
+                        iconClose.classList.add('hidden');
+                    }
+                });
+            });
+        </script>
+    @endif
 </body>
 
 </html>
