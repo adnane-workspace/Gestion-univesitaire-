@@ -72,7 +72,7 @@
     <header class="relative min-h-screen flex items-center pt-24 px-6 overflow-hidden">
         <!-- Background Image with Overlay -->
         <div class="absolute inset-0 -z-20">
-            <img src="{{ asset('UPF-1.jpg') }}" alt="Campus Background" class="w-full h-full object-cover">
+            <img src="{{ asset('UPF-1.jpg') }}" alt="Campus Background" class="w-full h-full object-cover blur-lg">
             <div class="absolute inset-0 bg-gradient-to-r from-slate-900/90 via-slate-900/70 to-transparent"></div>
         </div>
 
