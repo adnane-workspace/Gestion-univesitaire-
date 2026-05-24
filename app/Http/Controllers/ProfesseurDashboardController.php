@@ -7,6 +7,7 @@ use App\Models\Professor;
 use App\Models\Module;
 use App\Models\Schedule;
 use App\Models\Grade;
+use App\Models\Absence;
 use App\Models\Student;
 use App\Models\ModuleElement;
 use Illuminate\Support\Facades\Auth;
@@ -22,14 +23,29 @@ class ProfesseurDashboardController extends Controller
         }
 
         $modules = $professor->modules()->with('filiere')->get();
-        $schedulesCount = $professor->schedules()->whereDate('date', now())->count();
-        $studentsCount = Student::whereHas('grades.moduleElement.module', function($q) use ($professor) {
-            $q->whereHas('professors', function($pq) use ($professor) {
-                $pq->where('professors.id', $professor->id);
-            });
-        })->distinct()->count();
+        $todayDay = now()->locale('fr')->isoFormat('dddd');
+        $todaySchedules = $professor->schedules()
+            ->with(['module', 'room'])
+            ->where(function ($query) use ($todayDay) {
+                $query->whereDate('date', today())
+                    ->orWhere(function ($query) use ($todayDay) {
+                        $query->whereNull('date')
+                            ->where('day', ucfirst($todayDay));
+                    });
+            })
+            ->orderBy('start_time')
+            ->get();
 
-        return view('professeur.dashboard', compact('professor', 'modules', 'schedulesCount', 'studentsCount'));
+        $schedulesCount = $todaySchedules->count();
+        $studentsCount = Student::whereIn('filiere_id', $modules->pluck('filiere_id')->filter()->unique())
+            ->distinct()
+            ->count();
+
+        $absencesCount = Absence::whereHas('schedule', function ($q) use ($professor) {
+            $q->where('professor_id', $professor->id);
+        })->whereDate('date', now())->count();
+
+        return view('professeur.dashboard', compact('professor', 'modules', 'todaySchedules', 'schedulesCount', 'studentsCount', 'absencesCount'));
     }
 
     public function modules()
@@ -85,6 +101,89 @@ class ProfesseurDashboardController extends Controller
         }
 
         return back()->with('success', 'Notes enregistrées avec succès.');
+    }
+
+    public function absences(Request $request)
+    {
+        $professor = Auth::user()->professor;
+        if (!$professor) {
+            return redirect()->route('login')->with('error', 'Profil professeur non trouvé.');
+        }
+
+        $schedules = $professor->schedules()->with(['module', 'room'])->orderBy('date')->orderBy('start_time')->get();
+        $selectedScheduleId = $request->input('schedule_id');
+
+        // Auto-select first available schedule when none is provided
+        if (!$selectedScheduleId && $schedules->isNotEmpty()) {
+            $selectedScheduleId = $schedules->first()->id;
+        }
+
+        $schedule = null;
+        $students = collect();
+        $absences = collect();
+
+        if ($selectedScheduleId) {
+            $schedule = $professor->schedules()->where('id', $selectedScheduleId)->with('module')->first();
+            if ($schedule && $schedule->module) {
+                $students = Student::with('filiere')
+                    ->where('filiere_id', $schedule->module->filiere_id)
+                    ->orderBy('last_name')
+                    ->orderBy('first_name')
+                    ->get();
+
+                $absences = Absence::where('schedule_id', $selectedScheduleId)->get()->keyBy('student_id');
+            }
+        }
+
+        return view('professeur.absences', compact('schedules', 'selectedScheduleId', 'students', 'schedule', 'absences'));
+    }
+
+    public function storeAbsences(Request $request)
+    {
+        $professor = Auth::user()->professor;
+        if (!$professor) {
+            return redirect()->route('login')->with('error', 'Profil professeur non trouvé.');
+        }
+
+        $request->validate([
+            'schedule_id' => 'required|exists:schedules,id',
+            'absent' => 'array',
+            'absent.*' => 'in:1',
+            'reason' => 'array',
+            'reason.*' => 'nullable|string|max:255',
+            'excused' => 'array',
+            'excused.*' => 'nullable|in:1',
+        ]);
+
+        if (!$professor->schedules()->where('id', $request->schedule_id)->exists()) {
+            abort(403, 'Accès non autorisé.');
+        }
+
+        $schedule = Schedule::find($request->schedule_id);
+        if (!$schedule) {
+            return back()->with('error', 'Séance introuvable.');
+        }
+
+        $selectedAbsences = $request->input('absent', []);
+        $reasons = $request->input('reason', []);
+        $excused = $request->input('excused', []);
+
+        foreach ($selectedAbsences as $studentId => $value) {
+            Absence::updateOrCreate(
+                ['student_id' => $studentId, 'schedule_id' => $schedule->id],
+                [
+                    'date' => $schedule->date ?? now()->toDateString(),
+                    'reason' => $reasons[$studentId] ?? null,
+                    'excused' => isset($excused[$studentId]) ? true : false,
+                ]
+            );
+        }
+
+        Absence::where('schedule_id', $schedule->id)
+            ->whereNotIn('student_id', array_keys($selectedAbsences))
+            ->delete();
+
+        return back()->with('success', 'Absences mises à jour avec succès.');
     }
 
     public function schedule()

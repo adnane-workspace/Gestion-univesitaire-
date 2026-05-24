@@ -21,6 +21,12 @@
         </svg>
         Saisie des Notes
     </a>
+    <a href="{{ route('professeur.absences') }}" class="flex items-center gap-3 px-4 py-3 rounded-xl {{ request()->routeIs('professeur.absences') ? 'sidebar-active shadow-sm' : 'text-slate-500 hover:bg-indigo-50 hover:text-indigo-600' }} transition-all font-bold text-sm">
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+        </svg>
+        Absences
+    </a>
     <a href="{{ route('professeur.schedule') }}" class="flex items-center gap-3 px-4 py-3 rounded-xl {{ request()->routeIs('professeur.schedule') ? 'sidebar-active shadow-sm' : 'text-slate-500 hover:bg-indigo-50 hover:text-indigo-600' }} transition-all font-bold text-sm">
         <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
@@ -41,6 +47,9 @@
                     <a href="{{ route('professeur.grades') }}" class="bg-indigo-600 hover:bg-indigo-700 text-white rounded-2xl px-8 py-3 font-bold text-sm transition-all shadow-xl shadow-indigo-900/20">
                         Saisir des notes
                     </a>
+                    <a href="{{ route('professeur.absences') }}" class="bg-emerald-600 hover:bg-emerald-700 text-white rounded-2xl px-8 py-3 font-bold text-sm transition-all shadow-xl shadow-emerald-900/20">
+                        Suivi des absences
+                    </a>
                     <a href="{{ route('professeur.schedule') }}" class="bg-white/10 hover:bg-white/20 backdrop-blur-md text-white border border-white/10 rounded-2xl px-8 py-3 font-bold text-sm transition-all">
                         Mon planning
                     </a>
@@ -55,6 +64,10 @@
                 <div class="bg-white/5 backdrop-blur-md rounded-[2rem] p-6 border border-white/10 text-center min-w-[140px]">
                     <p class="text-[10px] font-black uppercase tracking-widest text-slate-500 mb-2">Modules</p>
                     <p class="text-4xl font-black text-white">{{ $modules->count() }}</p>
+                </div>
+                <div class="bg-white/5 backdrop-blur-md rounded-[2rem] p-6 border border-white/10 text-center min-w-[140px]">
+                    <p class="text-[10px] font-black uppercase tracking-widest text-slate-500 mb-2">Absences aujourd'hui</p>
+                    <p class="text-4xl font-black text-white">{{ $absencesCount }}</p>
                 </div>
             </div>
         </div>
@@ -74,12 +87,7 @@
                 </div>
                 <div class="p-8">
                     @php
-                        $today = \Carbon\Carbon::now()->locale('fr')->dayName;
-                        $todaySchedule = \App\Models\Schedule::where('professor_id', $professor->id)
-                            ->where('day', ucfirst($today))
-                            ->with(['module', 'room'])
-                            ->orderBy('start_time')
-                            ->get();
+                        $todaySchedule = $todaySchedules;
                     @endphp
 
                     @if($todaySchedule->isEmpty())
@@ -101,13 +109,13 @@
                                             <p class="text-lg font-black">{{ \Carbon\Carbon::parse($item->start_time)->format('H:i') }}</p>
                                         </div>
                                         <div class="flex-1">
-                                            <h4 class="font-black text-slate-800 text-lg">{{ $item->module->name }}</h4>
+                                            <h4 class="font-black text-slate-800 text-lg">{{ $item->module?->name ?? 'Module non renseigne' }}</h4>
                                             <div class="flex items-center gap-4 mt-1">
                                                 <span class="flex items-center gap-1 text-xs font-bold text-slate-400">
                                                     <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
                                                     </svg>
-                                                    {{ $item->room->name }}
+                                                    {{ $item->room?->name ?? 'Salle non renseignee' }}
                                                 </span>
                                                 <span class="px-2 py-0.5 rounded-md bg-indigo-50 text-indigo-600 text-[10px] font-black uppercase tracking-widest">{{ $item->type }}</span>
                                             </div>

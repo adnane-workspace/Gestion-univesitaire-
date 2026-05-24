@@ -6,7 +6,6 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>@yield('title') | EduPortal UPF</title>
     <meta name="description" content="Plateforme de gestion académique de l'Université Panafricaine.">
-    <script src="https://cdn.tailwindcss.com"></script>
     <link rel="icon" type="image/png" href="{{ asset('logo.png') }}">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -31,7 +30,7 @@
             box-shadow: inset 4px 0 0 #4F46E5;
         }
     </style>
-    @vite(['resources/js/app.js'])
+    @vite(['resources/css/app.css','resources/js/app.js'])
 </head>
 
 <body class="h-full">
