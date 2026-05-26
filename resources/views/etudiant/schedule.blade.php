@@ -89,15 +89,24 @@
         </p>
     </div>
 
-    {{-- Legend --}}
+    {{-- Legend + Print button --}}
     @if(!$schedules->isEmpty())
-    <div class="flex flex-wrap gap-2">
-        @foreach($moduleColors as $modName => $c)
-        <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold {{ $c['badge'] }}">
-            <span class="w-2 h-2 rounded-full {{ $c['dot'] }}"></span>
-            {{ Str::limit($modName, 24) }}
-        </span>
-        @endforeach
+    <div class="flex items-center gap-4">
+        <div class="flex flex-wrap gap-2">
+            @foreach($moduleColors as $modName => $c)
+            <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold {{ $c['badge'] }}">
+                <span class="w-2 h-2 rounded-full {{ $c['dot'] }}"></span>
+                {{ Str::limit($modName, 24) }}
+            </span>
+            @endforeach
+        </div>
+
+        <button id="print-schedule-btn" onclick="window.print()" class="ml-2 inline-flex items-center gap-2 px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 shadow-sm hidden-print">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 9V2h12v7M6 18H4a2 2 0 01-2-2v-5a2 2 0 012-2h16a2 2 0 012 2v5a2 2 0 01-2 2h-2M6 14h12v7H6v-7z" />
+            </svg>
+            <span class="font-bold text-sm">Imprimer</span>
+        </button>
     </div>
     @endif
 </div>
@@ -116,7 +125,7 @@
 
 @else
 {{-- ═══════════════════════════════════════════════ WEEKLY GRID --}}
-<div class="overflow-x-auto rounded-3xl shadow-lg border border-slate-100">
+<div id="schedule-print-area" class="overflow-x-auto rounded-3xl shadow-lg border border-slate-100">
     <table class="w-full min-w-[760px] border-collapse bg-white">
 
         {{-- ── Column headers (days) ── --}}
@@ -263,5 +272,72 @@
 @endif
 
 @endif {{-- end !empty --}}
+
+{{-- Print styles: show only the timetable table when printing --}}
+<style>
+    @media print {
+        @page { size: landscape; margin: 10mm; }
+
+        /* Hide everything visually by default (use visibility to allow targeted overrides) */
+        body * { visibility: hidden !important; }
+
+        /* Make the schedule area and its descendants visible */
+        #schedule-print-area, #schedule-print-area * { visibility: visible !important; }
+
+        /* Ensure the schedule container is positioned and full width */
+        #schedule-print-area { position: absolute !important; left: 0 !important; top: 0 !important; width: 100% !important; background: #fff !important; padding: 0 !important; margin: 0 !important; }
+
+        /* Table elements must be displayed as table for proper layout */
+        #schedule-print-area table { display: table !important; width: 100% !important; border-collapse: collapse !important; }
+        #schedule-print-area thead { display: table-header-group !important; }
+        #schedule-print-area tbody { display: table-row-group !important; }
+        #schedule-print-area tr { display: table-row !important; }
+        #schedule-print-area th, #schedule-print-area td { display: table-cell !important; }
+
+        /* Remove shadows/rounded corners for print clarity */
+        #schedule-print-area .shadow-lg, #schedule-print-area .shadow-sm, #schedule-print-area .rounded-3xl { box-shadow: none !important; border-radius: 0 !important; }
+    }
+</style>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.9.3/html2pdf.bundle.min.js"></script>
+<script>
+    document.addEventListener('DOMContentLoaded', function(){
+        const exportBtn = document.getElementById('export-pdf-btn');
+        if(!exportBtn) return;
+
+        exportBtn.addEventListener('click', function(){
+            const scheduleEl = document.getElementById('schedule-print-area');
+            if(!scheduleEl) return;
+
+            // Export only the timetable table to PDF (exclude header/legend/summary)
+            const tableEl = scheduleEl.querySelector('table');
+            if(!tableEl) return;
+
+            const opt = {
+                margin:       8,
+                filename:     `emploi_du_temps_${(document.querySelector('.text-sm.font-bold') ? document.querySelector('.text-sm.font-bold').innerText.replace(/\s+/g,'_') : 'etudiant')}.pdf`,
+                image:        { type: 'jpeg', quality: 0.98 },
+                html2canvas:  { scale: 2, useCORS: true },
+                jsPDF:        { unit: 'mm', format: 'a4', orientation: 'landscape' }
+            };
+
+            // Clone only the table to avoid including other UI parts
+            const wrapper = document.createElement('div');
+            const clonedTable = tableEl.cloneNode(true);
+            // Make sure clone fills the page
+            wrapper.style.background = '#fff';
+            wrapper.style.padding = '8px';
+            wrapper.appendChild(clonedTable);
+            wrapper.id = 'schedule-print-clone';
+            document.body.appendChild(wrapper);
+
+            html2pdf().set(opt).from(wrapper).save().then(() => {
+                document.body.removeChild(wrapper);
+            }).catch(() => {
+                document.body.removeChild(wrapper);
+            });
+        });
+    });
+</script>
 
 @endsection
