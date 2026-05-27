@@ -10,6 +10,8 @@ use App\Models\Module;
 use App\Models\Room;
 use App\Models\ModuleElement;
 use App\Models\Schedule;
+use App\Models\Grade;
+use App\Models\Absence;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Str;
@@ -135,6 +137,9 @@ class DatabaseSeeder extends Seeder
             "Abdessamad Kaf", "El Moumen Aicha", "Medaoui Ikram"
         ];
         
+        $moduleElements = ModuleElement::all();
+        $schedules = Schedule::all();
+
         foreach ($names as $fullName) {
             $parts = explode(' ', $fullName);
             $firstName = $parts[0];
@@ -147,7 +152,7 @@ class DatabaseSeeder extends Seeder
                 'role' => 'etudiant',
             ]);
 
-            Student::firstOrCreate(['user_id' => $user->id], [
+            $student = Student::firstOrCreate(['user_id' => $user->id], [
                 'filiere_id' => $filiereGinf->id,
                 'first_name' => $firstName,
                 'last_name' => $lastName,
@@ -156,6 +161,36 @@ class DatabaseSeeder extends Seeder
                 'birth_date' => now()->subYears(rand(18, 25)),
                 'address' => 'Adresse Ville ' . rand(1, 10),
             ]);
+
+            // Data for student: grades + absences
+            $gradesCount = rand(3, 6);
+            $usedElementIds = [];
+            for ($g = 0; $g < $gradesCount; $g++) {
+                $available = $moduleElements->whereNotIn('id', $usedElementIds);
+                $element = $available->isEmpty() ? $moduleElements->random() : $available->random();
+                $usedElementIds[] = $element->id;
+
+                Grade::firstOrCreate([
+                    'student_id' => $student->id,
+                    'module_element_id' => $element->id,
+                    'session' => 'normal',
+                    'academic_year' => '2024-2025',
+                ], [
+                    'score' => round(rand(0, 200) / 10, 2),
+                ]);
+            }
+
+            if ($schedules->isNotEmpty() && rand(0, 3) === 0) {
+                $schedule = $schedules->random();
+                Absence::firstOrCreate([
+                    'student_id' => $student->id,
+                    'schedule_id' => $schedule->id,
+                    'date' => now()->subDays(rand(1, 40)),
+                ], [
+                    'reason' => 'Absence non justifiée',
+                    'excused' => false,
+                ]);
+            }
         }
     }
 }
