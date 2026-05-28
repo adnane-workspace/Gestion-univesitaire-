@@ -128,16 +128,160 @@
     }
 
     @media print {
-        @page { size: landscape; margin: 10mm; }
+        @page { size: landscape; margin: 12mm; }
+
         body * { visibility: hidden !important; }
-        #schedule-print-area, #schedule-print-area * { visibility: visible !important; }
-        #schedule-print-area { position: absolute !important; left: 0 !important; top: 0 !important; width: 100% !important; background: #fff !important; padding: 0 !important; margin: 0 !important; }
-        #schedule-print-area table { display: table !important; width: 100% !important; border-collapse: collapse !important; }
-        #schedule-print-area thead { display: table-header-group !important; }
-        #schedule-print-area tbody { display: table-row-group !important; }
-        #schedule-print-area tr { display: table-row !important; }
-        #schedule-print-area th, #schedule-print-area td { display: table-cell !important; }
-        #schedule-print-area .shadow-lg, #schedule-print-area .shadow-sm, #schedule-print-area .rounded-3xl { box-shadow: none !important; border-radius: 0 !important; }
+
+        #print-area, #print-area * { visibility: visible !important; }
+        #print-area {
+            position: absolute !important;
+            left: 0 !important;
+            top: 0 !important;
+            width: 100% !important;
+            background: #fff !important;
+            padding: 0 !important;
+            margin: 0 !important;
+        }
+
+        #print-area .print-header {
+            display: flex !important;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 16px;
+            padding-bottom: 12px;
+            border-bottom: 2px solid #e2e8f0;
+        }
+
+        #print-area .print-title {
+            font-size: 20px;
+            font-weight: 900;
+            color: #1e293b;
+            margin: 0;
+        }
+
+        #print-area .print-filiere {
+            font-size: 12px;
+            font-weight: 700;
+            color: #6366f1;
+            margin: 2px 0 0 0;
+        }
+
+        #print-area .print-date {
+            font-size: 10px;
+            color: #94a3b8;
+            font-weight: 600;
+        }
+
+        #print-area .print-legend {
+            display: flex !important;
+            flex-wrap: wrap;
+            gap: 8px;
+            margin-bottom: 14px;
+        }
+
+        #print-area .print-legend-item {
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+            font-size: 9px;
+            font-weight: 700;
+            color: #475569;
+            padding: 3px 8px;
+            border: 1px solid #e2e8f0;
+            border-radius: 6px;
+            background: #f8fafc;
+        }
+
+        #print-area .print-legend-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+        }
+
+        #print-area table {
+            display: table !important;
+            width: 100% !important;
+            border-collapse: collapse !important;
+            border: 1px solid #e2e8f0 !important;
+        }
+
+        #print-area thead { display: table-header-group !important; }
+        #print-area tbody { display: table-row-group !important; }
+        #print-area tr { display: table-row !important; }
+
+        #print-area th, #print-area td {
+            display: table-cell !important;
+            border: 1px solid #e2e8f0 !important;
+        }
+
+        #print-area th {
+            background: #1e293b !important;
+            color: #fff !important;
+            font-size: 10px !important;
+            font-weight: 800 !important;
+            padding: 8px 6px !important;
+            text-align: center !important;
+            -webkit-print-color-adjust: exact !important;
+            print-color-adjust: exact !important;
+        }
+
+        #print-area th.today-print {
+            background: #4f46e5 !important;
+        }
+
+        #print-area td {
+            padding: 6px !important;
+            vertical-align: top !important;
+            font-size: 9px !important;
+        }
+
+        #print-area td.time-cell {
+            background: #f8fafc !important;
+            text-align: center !important;
+            font-weight: 800 !important;
+            color: #4f46e5 !important;
+            width: 70px !important;
+            -webkit-print-color-adjust: exact !important;
+            print-color-adjust: exact !important;
+        }
+
+        #print-area td.today-print-col {
+            background: #eef2ff !important;
+            -webkit-print-color-adjust: exact !important;
+            print-color-adjust: exact !important;
+        }
+
+        #print-area .course-card-print {
+            border-radius: 6px !important;
+            padding: 5px !important;
+            border-left: 3px solid !important;
+            box-shadow: none !important;
+        }
+
+        #print-area .course-name-print {
+            font-size: 9px !important;
+            font-weight: 900 !important;
+            line-height: 1.3 !important;
+            margin-bottom: 2px !important;
+        }
+
+        #print-area .course-detail-print {
+            font-size: 8px !important;
+            font-weight: 600 !important;
+            line-height: 1.4 !important;
+        }
+
+        #print-area .empty-cell-print {
+            text-align: center !important;
+            color: #cbd5e1 !important;
+            font-size: 10px !important;
+        }
+
+        #print-area .shadow-xl,
+        #print-area .shadow-sm,
+        #print-area .shadow-lg,
+        #print-area .rounded-\[2rem\],
+        #print-area .rounded-2xl { box-shadow: none !important; border-radius: 0 !important; }
     }
 </style>
 
@@ -176,9 +320,9 @@
             </div>
 
             {{-- Print button --}}
-            <button onclick="window.print()" class="hidden-print inline-flex items-center gap-2 px-5 py-2.5 bg-white border border-slate-200 text-slate-700 rounded-xl hover:bg-slate-50 hover:border-slate-300 shadow-sm transition-all font-bold text-sm">
-                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 9V2h12v7M6 18H4a2 2 0 01-2-2v-5a2 2 0 012-2h16a2 2 0 012 2v5a2 2 0 01-2 2h-2M6 14h12v7H6v-7z" />
+            <button onclick="window.print()" class="hidden-print inline-flex items-center gap-2.5 px-6 py-3 bg-gradient-to-r from-indigo-600 to-indigo-700 text-white rounded-xl hover:from-indigo-700 hover:to-indigo-800 shadow-lg shadow-indigo-200 hover:shadow-indigo-300 transition-all font-bold text-sm active:scale-95">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-4.5 w-4.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M6 9V2h12v7M6 18H4a2 2 0 01-2-2v-5a2 2 0 012-2h16a2 2 0 012 2v5a2 2 0 01-2 2h-2M6 14h12v7H6v-7z" />
                 </svg>
                 <span>Imprimer</span>
             </button>
@@ -201,8 +345,35 @@
 
 @else
 {{-- ═══════════════════════════════════════════════ WEEKLY GRID --}}
-<div id="schedule-print-area" class="animate-fade-slide-up animate-delay-100">
-    <div class="overflow-x-auto rounded-[2rem] shadow-xl border border-slate-200/60 bg-white">
+<div id="print-area" class="animate-fade-slide-up animate-delay-100">
+    {{-- Print-only header --}}
+    <div class="print-header" style="display:none">
+        <div>
+            <p class="print-title">Emploi du Temps</p>
+            @if(isset($student) && $student->filiere)
+                <p class="print-filiere">{{ $student->filiere->name }}</p>
+            @endif
+        </div>
+        <p class="print-date">{{ \Carbon\Carbon::now()->format('d/m/Y') }}</p>
+    </div>
+    {{-- Print-only legend --}}
+    <div class="print-legend" style="display:none">
+        @php
+            $legendColors = [
+                'indigo-500' => '#6366f1', 'violet-500' => '#8b5cf6', 'emerald-500' => '#10b981',
+                'amber-500' => '#f59e0b', 'rose-500' => '#f43f5e', 'cyan-500' => '#06b6d4',
+                'fuchsia-500' => '#d946ef', 'teal-500' => '#14b8a6',
+            ];
+        @endphp
+        @foreach($moduleColors as $modName => $c)
+        <span class="print-legend-item">
+            <span class="print-legend-dot" style="background: {{ $legendColors[str_replace('bg-', '', $c['dot'])] ?? '#6366f1' }}"></span>
+            {{ $modName }}
+        </span>
+        @endforeach
+    </div>
+
+    <div id="schedule-print-area" class="overflow-x-auto rounded-[2rem] shadow-xl border border-slate-200/60 bg-white">
         <table class="w-full min-w-[800px] border-collapse">
 
             {{-- ── Column headers (days) ── --}}
@@ -222,7 +393,7 @@
                     @php $isToday = ($day === $today); $hasAny = in_array($day, $activeDays); @endphp
                     <th class="px-3 py-5 text-center border-r border-slate-200/60 last:border-r-0
                         {{ $isToday
-                            ? 'today-col-header text-white'
+                            ? 'today-col-header today-print text-white'
                             : ($hasAny ? 'bg-slate-800 text-white' : 'bg-slate-800 text-slate-500') }}">
                         <div class="flex flex-col items-center gap-1">
                             <span class="text-sm font-black tracking-wide">{{ $day }}</span>
@@ -248,7 +419,7 @@
                 <tr class="group/row border-b border-slate-100 last:border-b-0 hover:bg-slate-50/50 transition-colors duration-200">
 
                     {{-- Time label cell --}}
-                    <td class="px-4 py-4 border-r border-slate-100 bg-slate-50/80 text-center align-middle">
+                    <td class="time-cell px-4 py-4 border-r border-slate-100 bg-slate-50/80 text-center align-middle">
                         <div class="flex flex-col items-center">
                             <span class="text-lg font-black text-indigo-600 leading-none">{{ $slotStart }}</span>
                             <span class="text-[10px] text-slate-400 font-bold mt-1 tracking-wide">{{ $slotEnd }}</span>
@@ -263,11 +434,11 @@
                         $isLast  = ($dayIdx === count($days) - 1);
                     @endphp
                     <td class="p-2.5 border-r border-slate-100/80 {{ $isLast ? 'border-r-0' : '' }}
-                        {{ $isToday ? 'today-glow' : 'bg-white' }}" style="min-width:135px;">
+                        {{ $isToday ? 'today-glow today-print-col' : 'bg-white' }}" style="min-width:135px;">
 
                         @if($course)
                         @php $c = $moduleColors[$course->module->name]; @endphp
-                        <div class="schedule-card-hover relative {{ $c['card'] }} border {{ $c['border'] }} rounded-2xl p-3.5 h-full cursor-default group/card overflow-hidden">
+                        <div class="schedule-card-hover course-card-print relative {{ $c['card'] }} border {{ $c['border'] }} rounded-2xl p-3.5 h-full cursor-default group/card overflow-hidden" style="border-left-width:3px">
                             {{-- Accent bar --}}
                             <div class="absolute left-0 top-2.5 bottom-2.5 w-[3px] rounded-r-full {{ $c['dot'] }}"></div>
 
@@ -275,10 +446,10 @@
                             <div class="absolute -right-3 -top-3 w-16 h-16 rounded-full {{ $c['dot'] }}" style="opacity:0.04"></div>
 
                             {{-- Module name --}}
-                            <p class="text-[11px] font-black {{ $c['text'] }} leading-snug pl-2.5 mb-2.5">{{ $course->module->name }}</p>
+                            <p class="course-name-print text-[11px] font-black {{ $c['text'] }} leading-snug pl-2.5 mb-2.5">{{ $course->module->name }}</p>
 
                             {{-- Details --}}
-                            <div class="space-y-1 pl-2.5">
+                            <div class="course-detail-print space-y-1 pl-2.5">
                                 <div class="flex items-center gap-1.5">
                                     <svg xmlns="http://www.w3.org/2000/svg" class="h-3 w-3 {{ $c['sub'] }} shrink-0 opacity-70" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/>
@@ -297,7 +468,7 @@
 
                         @else
                         {{-- Empty cell --}}
-                        <div class="min-h-[78px] rounded-2xl
+                        <div class="empty-cell-print min-h-[78px] rounded-2xl
                             {{ $isToday ? 'border border-dashed border-indigo-200/60 bg-indigo-50/30' : 'border border-dashed border-slate-100' }}
                             flex items-center justify-center transition-colors duration-200">
                             <span class="{{ $isToday ? 'text-indigo-200' : 'text-slate-200' }} text-sm select-none font-light">—</span>
@@ -380,6 +551,8 @@
     </div>
 </div>
 @endif
+
+</div> {{-- end #print-area --}}
 
 @endif {{-- end !empty --}}
 
