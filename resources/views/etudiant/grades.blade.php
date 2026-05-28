@@ -30,9 +30,17 @@
 @endsection
 
 @section('content')
-    <div class="mb-8">
-        <h2 class="text-3xl font-bold text-slate-800">Mes Résultats Académiques</h2>
-        <p class="text-slate-500 mt-2">Consultez vos notes par module pour l'année universitaire en cours.</p>
+    <div class="mb-8 flex items-center justify-between">
+        <div>
+            <h2 class="text-3xl font-bold text-slate-800">Mes Résultats Académiques</h2>
+            <p class="text-slate-500 mt-2">Consultez vos notes par module pour l'année universitaire en cours.</p>
+        </div>
+        <a href="{{ route('etudiant.bulletin.pdf') }}" class="inline-flex items-center justify-center rounded-3xl bg-indigo-600 text-white font-bold px-6 py-3 shadow-lg shadow-indigo-200/30 hover:bg-indigo-700 transition whitespace-nowrap">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" />
+            </svg>
+            Télécharger PDF
+        </a>
     </div>
 
     @if($grades->isEmpty())

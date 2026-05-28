@@ -64,5 +64,6 @@ Route::middleware(['auth', 'CheckEtudiant'])->prefix('etudiant')->name('etudiant
     Route::get('/grades', [EtudiantDashboardController::class, 'grades'])->name('grades');
     Route::get('/modules', [EtudiantDashboardController::class, 'modules'])->name('modules');
     Route::get('/schedule', [EtudiantDashboardController::class, 'schedule'])->name('schedule');
+    Route::get('/bulletin', [EtudiantDashboardController::class, 'bulletinPdf'])->name('bulletin.pdf');
     Route::post('/chatbot/query', [EtudiantDashboardController::class, 'chatbotQuery'])->name('chatbot.query');
 });

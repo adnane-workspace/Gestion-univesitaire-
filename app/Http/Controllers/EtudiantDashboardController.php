@@ -4,6 +4,9 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Barryvdh\DomPDF\Facade\Pdf;
+use Illuminate\Support\Facades\File;
+use Illuminate\Support\Str;
 
 class EtudiantDashboardController extends Controller
 {
@@ -59,6 +62,28 @@ class EtudiantDashboardController extends Controller
         })->with(['module', 'room', 'professor'])->orderBy('day')->orderBy('start_time')->get();
 
         return view('etudiant.schedule', compact('schedules', 'student'));
+    }
+
+    public function bulletinPdf()
+    {
+        $student = Auth::user()->student;
+        if (!$student) {
+            return redirect()->route('login')->with('error', 'Profil étudiant non trouvé.');
+        }
+
+        $grades = $student->grades()->with(['moduleElement.module'])->get();
+        $absences = \App\Models\Absence::where('student_id', $student->id)
+            ->with(['schedule.module', 'schedule.room', 'schedule.professor'])
+            ->get();
+        $gpa = $student->calculateGPA();
+        $logo = null;
+        $logoPath = public_path('logo.png');
+        if (File::exists($logoPath)) {
+            $logo = base64_encode(File::get($logoPath));
+        }
+
+        $pdf = Pdf::loadView('etudiant.bulletin_pdf', compact('student', 'grades', 'absences', 'gpa', 'logo'));
+        return $pdf->download('Bulletin_' . Str::slug($student->getFullNameAttribute(), '_') . '.pdf');
     }
 
     public function chatbotQuery(Request $request)

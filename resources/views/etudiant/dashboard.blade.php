@@ -46,6 +46,11 @@
                     <p class="text-2xl font-black text-white">0 <span class="text-xs opacity-60">heures</span></p>
                 </div>
             </div>
+            <div class="mt-8">
+                <a href="{{ route('etudiant.bulletin.pdf') }}" class="inline-flex items-center justify-center rounded-3xl bg-white text-indigo-700 font-bold px-6 py-3 shadow-lg shadow-indigo-200/30 hover:bg-slate-100 transition">
+                    Télécharger mon bulletin PDF
+                </a>
+            </div>
         </div>
         
         <!-- Decoration -->
