@@ -35,14 +35,12 @@
     $days        = ['Lundi', 'Mardi', 'Mercredi', 'Jeudi', 'Vendredi', 'Samedi'];
     $today       = ucfirst(\Carbon\Carbon::now()->locale('fr')->dayName);
 
-    // Build sorted unique time-slot keys: "08:30-10:00"
     $timeSlots = $schedules->map(function($s) {
         return \Carbon\Carbon::parse($s->start_time)->format('H:i')
              . '|'
              . \Carbon\Carbon::parse($s->end_time)->format('H:i');
     })->unique()->sort()->values();
 
-    // Build matrix [timeKey][day] = schedule item
     $matrix = [];
     foreach ($schedules as $s) {
         $key = \Carbon\Carbon::parse($s->start_time)->format('H:i')
@@ -52,16 +50,15 @@
     }
     ksort($matrix);
 
-    // Assign a consistent color to each unique module
     $palette = [
-        ['dot'=>'bg-indigo-500',   'card'=>'bg-indigo-50',   'text'=>'text-indigo-800',   'sub'=>'text-indigo-500',   'border'=>'border-indigo-200',   'badge'=>'bg-indigo-100 text-indigo-700'],
-        ['dot'=>'bg-violet-500',   'card'=>'bg-violet-50',   'text'=>'text-violet-800',   'sub'=>'text-violet-500',   'border'=>'border-violet-200',   'badge'=>'bg-violet-100 text-violet-700'],
-        ['dot'=>'bg-emerald-500',  'card'=>'bg-emerald-50',  'text'=>'text-emerald-800',  'sub'=>'text-emerald-600',  'border'=>'border-emerald-200',  'badge'=>'bg-emerald-100 text-emerald-700'],
-        ['dot'=>'bg-amber-500',    'card'=>'bg-amber-50',    'text'=>'text-amber-800',    'sub'=>'text-amber-600',    'border'=>'border-amber-200',    'badge'=>'bg-amber-100 text-amber-700'],
-        ['dot'=>'bg-rose-500',     'card'=>'bg-rose-50',     'text'=>'text-rose-800',     'sub'=>'text-rose-500',     'border'=>'border-rose-200',     'badge'=>'bg-rose-100 text-rose-700'],
-        ['dot'=>'bg-cyan-500',     'card'=>'bg-cyan-50',     'text'=>'text-cyan-800',     'sub'=>'text-cyan-600',     'border'=>'border-cyan-200',     'badge'=>'bg-cyan-100 text-cyan-700'],
-        ['dot'=>'bg-fuchsia-500',  'card'=>'bg-fuchsia-50',  'text'=>'text-fuchsia-800',  'sub'=>'text-fuchsia-500',  'border'=>'border-fuchsia-200',  'badge'=>'bg-fuchsia-100 text-fuchsia-700'],
-        ['dot'=>'bg-teal-500',     'card'=>'bg-teal-50',     'text'=>'text-teal-800',     'sub'=>'text-teal-600',     'border'=>'border-teal-200',     'badge'=>'bg-teal-100 text-teal-700'],
+        ['dot'=>'bg-indigo-500',   'card'=>'bg-indigo-50',   'text'=>'text-indigo-800',   'sub'=>'text-indigo-500',   'border'=>'border-indigo-200',   'badge'=>'bg-indigo-100 text-indigo-700',  'glow'=>'shadow-indigo-100'],
+        ['dot'=>'bg-violet-500',   'card'=>'bg-violet-50',   'text'=>'text-violet-800',   'sub'=>'text-violet-500',   'border'=>'border-violet-200',   'badge'=>'bg-violet-100 text-violet-700',  'glow'=>'shadow-violet-100'],
+        ['dot'=>'bg-emerald-500',  'card'=>'bg-emerald-50',  'text'=>'text-emerald-800',  'sub'=>'text-emerald-600',  'border'=>'border-emerald-200',  'badge'=>'bg-emerald-100 text-emerald-700', 'glow'=>'shadow-emerald-100'],
+        ['dot'=>'bg-amber-500',    'card'=>'bg-amber-50',    'text'=>'text-amber-800',    'sub'=>'text-amber-600',    'border'=>'border-amber-200',    'badge'=>'bg-amber-100 text-amber-700',     'glow'=>'shadow-amber-100'],
+        ['dot'=>'bg-rose-500',     'card'=>'bg-rose-50',     'text'=>'text-rose-800',     'sub'=>'text-rose-500',     'border'=>'border-rose-200',     'badge'=>'bg-rose-100 text-rose-700',       'glow'=>'shadow-rose-100'],
+        ['dot'=>'bg-cyan-500',     'card'=>'bg-cyan-50',     'text'=>'text-cyan-800',     'sub'=>'text-cyan-600',     'border'=>'border-cyan-200',     'badge'=>'bg-cyan-100 text-cyan-700',       'glow'=>'shadow-cyan-100'],
+        ['dot'=>'bg-fuchsia-500',  'card'=>'bg-fuchsia-50',  'text'=>'text-fuchsia-800',  'sub'=>'text-fuchsia-500',  'border'=>'border-fuchsia-200',  'badge'=>'bg-fuchsia-100 text-fuchsia-700', 'glow'=>'shadow-fuchsia-100'],
+        ['dot'=>'bg-teal-500',     'card'=>'bg-teal-50',     'text'=>'text-teal-800',     'sub'=>'text-teal-600',     'border'=>'border-teal-200',     'badge'=>'bg-teal-100 text-teal-700',       'glow'=>'shadow-teal-100'],
     ];
     $moduleColors = [];
     $ci = 0;
@@ -73,160 +70,247 @@
         }
     }
 
-    // Days that actually have courses (to filter empty columns)
     $activeDays = $schedules->pluck('day')->unique()->toArray();
 @endphp
 
-{{-- ═══════════════════════════════════════════════ PAGE HEADER --}}
-<div class="mb-6 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-    <div>
-        <h2 class="text-3xl font-black text-slate-800 tracking-tight">Emploi du temps</h2>
-        <p class="text-slate-500 mt-1 text-sm font-medium">
-            Semaine en cours &bull;
-            @if(isset($student) && $student->filiere)
-                <span class="font-semibold text-indigo-600">{{ $student->filiere->name }}</span>
-            @endif
-        </p>
-    </div>
+<style>
+    @keyframes fadeSlideUp {
+        from { opacity: 0; transform: translateY(12px); }
+        to   { opacity: 1; transform: translateY(0); }
+    }
+    @keyframes shimmer {
+        0%   { background-position: -200% 0; }
+        100% { background-position: 200% 0; }
+    }
+    .animate-fade-slide-up { animation: fadeSlideUp 0.5s ease-out both; }
+    .animate-delay-100 { animation-delay: 0.1s; }
+    .animate-delay-200 { animation-delay: 0.2s; }
+    .animate-delay-300 { animation-delay: 0.3s; }
 
-    {{-- Legend + Print button --}}
-    @if(!$schedules->isEmpty())
-    <div class="flex items-center gap-4">
-        <div class="flex flex-wrap gap-2">
-            @foreach($moduleColors as $modName => $c)
-            <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold {{ $c['badge'] }}">
-                <span class="w-2 h-2 rounded-full {{ $c['dot'] }}"></span>
-                {{ Str::limit($modName, 24) }}
-            </span>
-            @endforeach
+    .schedule-card-hover {
+        transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+    .schedule-card-hover:hover {
+        transform: translateY(-2px) scale(1.01);
+        box-shadow: 0 10px 25px -5px rgba(0,0,0,0.08), 0 8px 10px -6px rgba(0,0,0,0.04);
+    }
+
+    .today-glow {
+        background: linear-gradient(180deg, rgba(99,102,241,0.06) 0%, rgba(99,102,241,0.02) 100%);
+    }
+
+    .today-col-header {
+        background: linear-gradient(135deg, #6366f1 0%, #4f46e5 50%, #4338ca 100%);
+        box-shadow: 0 4px 15px -3px rgba(99,102,241,0.4), inset 0 1px 0 rgba(255,255,255,0.1);
+    }
+
+    .today-dot {
+        background: #22c55e;
+        box-shadow: 0 0 0 3px rgba(34,197,94,0.2), 0 0 12px rgba(34,197,94,0.4);
+        animation: pulse-dot 2s ease-in-out infinite;
+    }
+    @keyframes pulse-dot {
+        0%, 100% { box-shadow: 0 0 0 3px rgba(34,197,94,0.2), 0 0 12px rgba(34,197,94,0.4); }
+        50%      { box-shadow: 0 0 0 6px rgba(34,197,94,0.1), 0 0 20px rgba(34,197,94,0.2); }
+    }
+
+    .summary-card {
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+    .summary-card:hover {
+        transform: translateY(-4px);
+        box-shadow: 0 20px 40px -12px rgba(0,0,0,0.1);
+    }
+
+    .glass-badge {
+        backdrop-filter: blur(8px);
+        -webkit-backdrop-filter: blur(8px);
+    }
+
+    @media print {
+        @page { size: landscape; margin: 10mm; }
+        body * { visibility: hidden !important; }
+        #schedule-print-area, #schedule-print-area * { visibility: visible !important; }
+        #schedule-print-area { position: absolute !important; left: 0 !important; top: 0 !important; width: 100% !important; background: #fff !important; padding: 0 !important; margin: 0 !important; }
+        #schedule-print-area table { display: table !important; width: 100% !important; border-collapse: collapse !important; }
+        #schedule-print-area thead { display: table-header-group !important; }
+        #schedule-print-area tbody { display: table-row-group !important; }
+        #schedule-print-area tr { display: table-row !important; }
+        #schedule-print-area th, #schedule-print-area td { display: table-cell !important; }
+        #schedule-print-area .shadow-lg, #schedule-print-area .shadow-sm, #schedule-print-area .rounded-3xl { box-shadow: none !important; border-radius: 0 !important; }
+    }
+</style>
+
+{{-- ═══════════════════════════════════════════════ PAGE HEADER --}}
+<div class="mb-8 animate-fade-slide-up">
+    <div class="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-5">
+        {{-- Title area --}}
+        <div class="flex items-center gap-4">
+            <div class="w-12 h-12 rounded-2xl bg-gradient-to-br from-indigo-500 to-indigo-600 flex items-center justify-center shadow-lg shadow-indigo-200 shrink-0">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                </svg>
+            </div>
+            <div>
+                <h2 class="text-3xl font-black text-slate-900 tracking-tight">Emploi du temps</h2>
+                <p class="text-slate-400 mt-0.5 text-sm font-medium">
+                    Semaine en cours &bull;
+                    @if(isset($student) && $student->filiere)
+                        <span class="font-bold text-indigo-600">{{ $student->filiere->name }}</span>
+                    @endif
+                </p>
+            </div>
         </div>
 
-        <button id="print-schedule-btn" onclick="window.print()" class="ml-2 inline-flex items-center gap-2 px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 shadow-sm hidden-print">
-            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 9V2h12v7M6 18H4a2 2 0 01-2-2v-5a2 2 0 012-2h16a2 2 0 012 2v5a2 2 0 01-2 2h-2M6 14h12v7H6v-7z" />
-            </svg>
-            <span class="font-bold text-sm">Imprimer</span>
-        </button>
+        {{-- Actions --}}
+        @if(!$schedules->isEmpty())
+        <div class="flex items-center gap-3 flex-wrap">
+            {{-- Legend --}}
+            <div class="flex flex-wrap gap-2">
+                @foreach($moduleColors as $modName => $c)
+                <span class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold {{ $c['badge'] }} glass-badge border {{ $c['border'] }}">
+                    <span class="w-2 h-2 rounded-full {{ $c['dot'] }}"></span>
+                    {{ Str::limit($modName, 20) }}
+                </span>
+                @endforeach
+            </div>
+
+            {{-- Print button --}}
+            <button onclick="window.print()" class="hidden-print inline-flex items-center gap-2 px-5 py-2.5 bg-white border border-slate-200 text-slate-700 rounded-xl hover:bg-slate-50 hover:border-slate-300 shadow-sm transition-all font-bold text-sm">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 9V2h12v7M6 18H4a2 2 0 01-2-2v-5a2 2 0 012-2h16a2 2 0 012 2v5a2 2 0 01-2 2h-2M6 14h12v7H6v-7z" />
+                </svg>
+                <span>Imprimer</span>
+            </button>
+        </div>
+        @endif
     </div>
-    @endif
 </div>
 
 @if($schedules->isEmpty())
 {{-- ═══════════════════════════════════════════════ EMPTY STATE --}}
-<div class="text-center py-32 bg-white rounded-[3rem] border-4 border-dashed border-slate-100">
-    <div class="w-24 h-24 bg-slate-50 rounded-full flex items-center justify-center mx-auto mb-6">
-        <svg xmlns="http://www.w3.org/2000/svg" class="h-12 w-12 text-slate-300" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+<div class="text-center py-32 bg-white rounded-[2.5rem] border border-slate-200/60 shadow-sm animate-fade-slide-up">
+    <div class="w-28 h-28 bg-gradient-to-br from-slate-50 to-slate-100 rounded-3xl flex items-center justify-center mx-auto mb-6">
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-14 w-14 text-slate-300" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
         </svg>
     </div>
     <h3 class="text-xl font-bold text-slate-400">Aucun cours planifié</h3>
-    <p class="text-slate-300 mt-2 text-sm">Votre emploi du temps n'a pas encore été généré par l'administration.</p>
+    <p class="text-slate-300 mt-2 text-sm max-w-sm mx-auto">Votre emploi du temps n'a pas encore été configuré. Veuillez contacter l'administration.</p>
 </div>
 
 @else
 {{-- ═══════════════════════════════════════════════ WEEKLY GRID --}}
-<div id="schedule-print-area" class="overflow-x-auto rounded-3xl shadow-lg border border-slate-100">
-    <table class="w-full min-w-[760px] border-collapse bg-white">
+<div id="schedule-print-area" class="animate-fade-slide-up animate-delay-100">
+    <div class="overflow-x-auto rounded-[2rem] shadow-xl border border-slate-200/60 bg-white">
+        <table class="w-full min-w-[800px] border-collapse">
 
-        {{-- ── Column headers (days) ── --}}
-        <thead>
-            <tr>
-                {{-- Time column header --}}
-                <th class="w-28 px-4 py-4 bg-gradient-to-br from-slate-800 to-slate-900 text-slate-300 text-xs font-bold uppercase tracking-widest text-center border-r border-slate-700 rounded-tl-3xl">
-                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mx-auto mb-1 opacity-50" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-                    </svg>
-                    Horaire
-                </th>
+            {{-- ── Column headers (days) ── --}}
+            <thead>
+                <tr>
+                    {{-- Time column header --}}
+                    <th class="w-28 px-4 py-5 bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 text-slate-400 text-xs font-black uppercase tracking-[0.2em] text-center border-r border-slate-700/50">
+                        <div class="flex flex-col items-center gap-1.5">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 opacity-40" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                            </svg>
+                            Horaire
+                        </div>
+                    </th>
 
-                @foreach($days as $day)
-                @php $isToday = ($day === $today); $hasAny = in_array($day, $activeDays); @endphp
-                <th class="px-3 py-4 text-center text-sm font-black border-r border-slate-100 last:border-r-0 last:rounded-tr-3xl
-                    {{ $isToday
-                        ? 'bg-gradient-to-b from-indigo-600 to-indigo-700 text-white shadow-inner'
-                        : ($hasAny ? 'bg-gradient-to-br from-slate-800 to-slate-900 text-slate-200' : 'bg-gradient-to-br from-slate-800 to-slate-900 text-slate-500') }}">
-                    {{ $day }}
-                    @if($isToday)
-                        <span class="flex items-center justify-center gap-1 mt-1">
-                            <span class="relative flex h-2 w-2">
-                                <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-white opacity-75"></span>
-                                <span class="relative inline-flex rounded-full h-2 w-2 bg-white"></span>
-                            </span>
-                            <span class="text-[10px] font-semibold opacity-90">Aujourd'hui</span>
-                        </span>
-                    @endif
-                </th>
-                @endforeach
-            </tr>
-        </thead>
+                    @foreach($days as $day)
+                    @php $isToday = ($day === $today); $hasAny = in_array($day, $activeDays); @endphp
+                    <th class="px-3 py-5 text-center border-r border-slate-200/60 last:border-r-0
+                        {{ $isToday
+                            ? 'today-col-header text-white'
+                            : ($hasAny ? 'bg-slate-800 text-white' : 'bg-slate-800 text-slate-500') }}">
+                        <div class="flex flex-col items-center gap-1">
+                            <span class="text-sm font-black tracking-wide">{{ $day }}</span>
+                            @if($isToday)
+                                <span class="flex items-center gap-1.5 mt-0.5">
+                                    <span class="today-dot w-2 h-2 rounded-full"></span>
+                                    <span class="text-[10px] font-bold opacity-90 tracking-wide">Aujourd'hui</span>
+                                </span>
+                            @endif
+                        </div>
+                    </th>
+                    @endforeach
+                </tr>
+            </thead>
 
-        {{-- ── Rows (time slots) ── --}}
-        <tbody>
-            @foreach($matrix as $slotKey => $dayMap)
-            @php
-                [$slotStart, $slotEnd] = explode('|', $slotKey);
-                $isLastRow = ($loop->last);
-            @endphp
-            <tr class="border-b border-slate-100 {{ $isLastRow ? 'last:border-b-0' : '' }}">
-
-                {{-- Time label cell --}}
-                <td class="px-4 py-3 border-r border-slate-100 bg-slate-50 text-center {{ $isLastRow ? 'rounded-bl-3xl' : '' }}">
-                    <span class="block text-base font-black text-indigo-600 leading-none">{{ $slotStart }}</span>
-                    <span class="block text-xs text-slate-400 font-semibold mt-1">{{ $slotEnd }}</span>
-                </td>
-
-                {{-- Day cells --}}
-                @foreach($days as $dayIdx => $day)
+            {{-- ── Rows (time slots) ── --}}
+            <tbody>
+                @foreach($matrix as $slotKey => $dayMap)
                 @php
-                    $course  = $dayMap[$day] ?? null;
-                    $isToday = ($day === $today);
-                    $isLast  = ($dayIdx === count($days) - 1);
+                    [$slotStart, $slotEnd] = explode('|', $slotKey);
+                    $isLastRow = ($loop->last);
                 @endphp
-                <td class="p-2 border-r border-slate-100 {{ $isLast ? 'border-r-0' : '' }} {{ $isLast && $isLastRow ? 'rounded-br-3xl' : '' }}
-                    {{ $isToday ? 'bg-indigo-50/40' : 'bg-white' }}" style="min-width:130px;">
+                <tr class="group/row border-b border-slate-100 last:border-b-0 hover:bg-slate-50/50 transition-colors duration-200">
 
-                    @if($course)
-                    @php $c = $moduleColors[$course->module->name]; @endphp
-                    <div class="group relative {{ $c['card'] }} {{ $c['border'] }} border rounded-2xl p-3 hover:shadow-md hover:-translate-y-0.5 transition-all duration-200 cursor-default h-full">
-                        {{-- Colored left accent --}}
-                        <div class="absolute left-0 top-3 bottom-3 w-1 rounded-r-full {{ $c['dot'] }}"></div>
+                    {{-- Time label cell --}}
+                    <td class="px-4 py-4 border-r border-slate-100 bg-slate-50/80 text-center align-middle">
+                        <div class="flex flex-col items-center">
+                            <span class="text-lg font-black text-indigo-600 leading-none">{{ $slotStart }}</span>
+                            <span class="text-[10px] text-slate-400 font-bold mt-1 tracking-wide">{{ $slotEnd }}</span>
+                        </div>
+                    </td>
 
-                        {{-- Module name --}}
-                        <p class="text-xs font-black {{ $c['text'] }} leading-snug pl-2 mb-2">{{ $course->module->name }}</p>
+                    {{-- Day cells --}}
+                    @foreach($days as $dayIdx => $day)
+                    @php
+                        $course  = $dayMap[$day] ?? null;
+                        $isToday = ($day === $today);
+                        $isLast  = ($dayIdx === count($days) - 1);
+                    @endphp
+                    <td class="p-2.5 border-r border-slate-100/80 {{ $isLast ? 'border-r-0' : '' }}
+                        {{ $isToday ? 'today-glow' : 'bg-white' }}" style="min-width:135px;">
 
-                        {{-- Room --}}
-                        <div class="flex items-center gap-1 pl-2 mb-1">
-                            <svg xmlns="http://www.w3.org/2000/svg" class="h-3 w-3 {{ $c['sub'] }} shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/>
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/>
-                            </svg>
-                            <span class="text-[11px] font-semibold {{ $c['sub'] }}">{{ $course->room->name }}</span>
+                        @if($course)
+                        @php $c = $moduleColors[$course->module->name]; @endphp
+                        <div class="schedule-card-hover relative {{ $c['card'] }} border {{ $c['border'] }} rounded-2xl p-3.5 h-full cursor-default group/card overflow-hidden">
+                            {{-- Accent bar --}}
+                            <div class="absolute left-0 top-2.5 bottom-2.5 w-[3px] rounded-r-full {{ $c['dot'] }}"></div>
+
+                            {{-- Subtle background decoration --}}
+                            <div class="absolute -right-3 -top-3 w-16 h-16 rounded-full {{ $c['dot'] }}" style="opacity:0.04"></div>
+
+                            {{-- Module name --}}
+                            <p class="text-[11px] font-black {{ $c['text'] }} leading-snug pl-2.5 mb-2.5">{{ $course->module->name }}</p>
+
+                            {{-- Details --}}
+                            <div class="space-y-1 pl-2.5">
+                                <div class="flex items-center gap-1.5">
+                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-3 w-3 {{ $c['sub'] }} shrink-0 opacity-70" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/>
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/>
+                                    </svg>
+                                    <span class="text-[10px] font-bold {{ $c['sub'] }}">{{ $course->room->name }}</span>
+                                </div>
+                                <div class="flex items-center gap-1.5">
+                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-3 w-3 {{ $c['sub'] }} shrink-0 opacity-70" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/>
+                                    </svg>
+                                    <span class="text-[10px] font-bold {{ $c['sub'] }}">Pr. {{ $course->professor->last_name }}</span>
+                                </div>
+                            </div>
                         </div>
 
-                        {{-- Professor --}}
-                        <div class="flex items-center gap-1 pl-2">
-                            <svg xmlns="http://www.w3.org/2000/svg" class="h-3 w-3 {{ $c['sub'] }} shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/>
-                            </svg>
-                            <span class="text-[11px] font-semibold {{ $c['sub'] }}">Pr. {{ $course->professor->last_name }}</span>
+                        @else
+                        {{-- Empty cell --}}
+                        <div class="min-h-[78px] rounded-2xl
+                            {{ $isToday ? 'border border-dashed border-indigo-200/60 bg-indigo-50/30' : 'border border-dashed border-slate-100' }}
+                            flex items-center justify-center transition-colors duration-200">
+                            <span class="{{ $isToday ? 'text-indigo-200' : 'text-slate-200' }} text-sm select-none font-light">—</span>
                         </div>
-                    </div>
+                        @endif
 
-                    @else
-                    {{-- Empty cell --}}
-                    <div class="min-h-[80px] rounded-2xl
-                        {{ $isToday ? 'border border-dashed border-indigo-200 bg-indigo-50/20' : 'border border-dashed border-slate-100' }}
-                        flex items-center justify-center">
-                        <span class="{{ $isToday ? 'text-indigo-200' : 'text-slate-200' }} text-xs select-none">—</span>
-                    </div>
-                    @endif
-
-                </td>
+                    </td>
+                    @endforeach
+                </tr>
                 @endforeach
-            </tr>
-            @endforeach
-        </tbody>
-    </table>
+            </tbody>
+        </table>
+    </div>
 </div>
 
 {{-- ═══════════════════════════════════════════════ TODAY'S SUMMARY CARD --}}
@@ -234,37 +318,63 @@
     $todayCourses = $schedules->where('day', $today)->sortBy('start_time');
 @endphp
 @if($todayCourses->isNotEmpty())
-<div class="mt-8">
-    <div class="flex items-center gap-3 mb-4">
-        <div class="w-2 h-2 rounded-full bg-indigo-500 animate-pulse"></div>
-        <h3 class="text-lg font-black text-slate-800">Aujourd'hui · <span class="text-indigo-600">{{ $today }}</span></h3>
-        <div class="flex-1 h-px bg-slate-100"></div>
-        <span class="text-xs font-bold text-slate-400 bg-slate-100 px-3 py-1 rounded-full">{{ $todayCourses->count() }} cours</span>
+<div class="mt-10 animate-fade-slide-up animate-delay-200">
+    {{-- Section header --}}
+    <div class="flex items-center gap-3 mb-6">
+        <div class="flex items-center gap-2">
+            <span class="today-dot w-2.5 h-2.5 rounded-full"></span>
+            <h3 class="text-lg font-black text-slate-800">Aujourd'hui</h3>
+        </div>
+        <span class="text-indigo-600 font-black text-lg">&middot;</span>
+        <span class="text-lg font-black text-indigo-600">{{ $today }}</span>
+        <div class="flex-1 h-px bg-gradient-to-r from-slate-200 to-transparent"></div>
+        <span class="text-xs font-bold text-white bg-indigo-600 px-3 py-1.5 rounded-full shadow-sm">
+            {{ $todayCourses->count() }} cours
+        </span>
     </div>
+
+    {{-- Course cards --}}
     <div class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-4">
         @foreach($todayCourses as $item)
         @php $c = $moduleColors[$item->module->name]; @endphp
-        <div class="bg-white rounded-2xl border {{ $c['border'] }} p-5 shadow-sm hover:shadow-md transition-all group relative overflow-hidden">
+        <div class="summary-card bg-white rounded-2xl border border-slate-200/60 p-5 shadow-sm relative overflow-hidden group">
+            {{-- Top accent line --}}
+            <div class="absolute top-0 left-0 right-0 h-1 {{ $c['dot'] }} rounded-t-2xl"></div>
+
             {{-- Background decoration --}}
-            <div class="absolute -right-4 -bottom-4 w-20 h-20 rounded-full opacity-5 {{ $c['dot'] }}"></div>
-            <div class="flex items-start justify-between mb-3">
+            <div class="absolute -right-6 -bottom-6 w-28 h-28 rounded-full {{ $c['dot'] }}" style="opacity:0.04"></div>
+
+            {{-- Time + Room badge --}}
+            <div class="flex items-center justify-between mb-3 mt-1">
                 <div class="flex items-center gap-2">
-                    <span class="w-3 h-3 rounded-full {{ $c['dot'] }} shadow-sm"></span>
-                    <span class="text-xs font-black {{ $c['text'] }} uppercase tracking-wider">
-                        {{ \Carbon\Carbon::parse($item->start_time)->format('H:i') }}
-                        –
-                        {{ \Carbon\Carbon::parse($item->end_time)->format('H:i') }}
-                    </span>
+                    <div class="w-8 h-8 rounded-xl {{ $c['card'] }} flex items-center justify-center border {{ $c['border'] }}">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 {{ $c['sub'] }}" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                        </svg>
+                    </div>
+                    <div>
+                        <p class="text-xs font-black text-slate-800">
+                            {{ \Carbon\Carbon::parse($item->start_time)->format('H:i') }}
+                            <span class="text-slate-400 mx-0.5">&ndash;</span>
+                            {{ \Carbon\Carbon::parse($item->end_time)->format('H:i') }}
+                        </p>
+                    </div>
                 </div>
-                <span class="text-[10px] font-bold {{ $c['badge'] }} px-2 py-0.5 rounded-full">{{ $item->room->name }}</span>
+                <span class="text-[10px] font-black {{ $c['badge'] }} px-2.5 py-1 rounded-lg">{{ $item->room->name }}</span>
             </div>
-            <h4 class="font-black text-slate-800 text-sm leading-snug mb-2">{{ $item->module->name }}</h4>
-            <p class="text-xs font-semibold text-slate-500 flex items-center gap-1">
-                <svg xmlns="http://www.w3.org/2000/svg" class="h-3.5 w-3.5 {{ $c['sub'] }}" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/>
-                </svg>
-                Prof. {{ $item->professor->first_name }} {{ $item->professor->last_name }}
-            </p>
+
+            {{-- Module name --}}
+            <h4 class="font-black text-slate-800 text-sm leading-snug mb-3">{{ $item->module->name }}</h4>
+
+            {{-- Professor --}}
+            <div class="flex items-center gap-2 pt-3 border-t border-slate-100">
+                <div class="w-7 h-7 rounded-full {{ $c['card'] }} border {{ $c['border'] }} flex items-center justify-center">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-3.5 w-3.5 {{ $c['sub'] }}" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/>
+                    </svg>
+                </div>
+                <span class="text-xs font-bold text-slate-600">Prof. {{ $item->professor->first_name }} {{ $item->professor->last_name }}</span>
+            </div>
         </div>
         @endforeach
     </div>
@@ -273,33 +383,6 @@
 
 @endif {{-- end !empty --}}
 
-{{-- Print styles: show only the timetable table when printing --}}
-<style>
-    @media print {
-        @page { size: landscape; margin: 10mm; }
-
-        /* Hide everything visually by default (use visibility to allow targeted overrides) */
-        body * { visibility: hidden !important; }
-
-        /* Make the schedule area and its descendants visible */
-        #schedule-print-area, #schedule-print-area * { visibility: visible !important; }
-
-        /* Ensure the schedule container is positioned and full width */
-        #schedule-print-area { position: absolute !important; left: 0 !important; top: 0 !important; width: 100% !important; background: #fff !important; padding: 0 !important; margin: 0 !important; }
-
-        /* Table elements must be displayed as table for proper layout */
-        #schedule-print-area table { display: table !important; width: 100% !important; border-collapse: collapse !important; }
-        #schedule-print-area thead { display: table-header-group !important; }
-        #schedule-print-area tbody { display: table-row-group !important; }
-        #schedule-print-area tr { display: table-row !important; }
-        #schedule-print-area th, #schedule-print-area td { display: table-cell !important; }
-
-        /* Remove shadows/rounded corners for print clarity */
-        #schedule-print-area .shadow-lg, #schedule-print-area .shadow-sm, #schedule-print-area .rounded-3xl { box-shadow: none !important; border-radius: 0 !important; }
-    }
-</style>
-
-<script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.9.3/html2pdf.bundle.min.js"></script>
 <script>
     document.addEventListener('DOMContentLoaded', function(){
         const exportBtn = document.getElementById('export-pdf-btn');
@@ -309,7 +392,6 @@
             const scheduleEl = document.getElementById('schedule-print-area');
             if(!scheduleEl) return;
 
-            // Export only the timetable table to PDF (exclude header/legend/summary)
             const tableEl = scheduleEl.querySelector('table');
             if(!tableEl) return;
 
@@ -321,10 +403,8 @@
                 jsPDF:        { unit: 'mm', format: 'a4', orientation: 'landscape' }
             };
 
-            // Clone only the table to avoid including other UI parts
             const wrapper = document.createElement('div');
             const clonedTable = tableEl.cloneNode(true);
-            // Make sure clone fills the page
             wrapper.style.background = '#fff';
             wrapper.style.padding = '8px';
             wrapper.appendChild(clonedTable);
