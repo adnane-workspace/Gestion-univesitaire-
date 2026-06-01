@@ -5,10 +5,10 @@
 @section('content')
     <div class="mb-6 flex items-center justify-between">
         <div>
-            <h1 class="text-2xl font-bold text-slate-800">Gestion des Filières</h1>
+            <h1 class="text-2xl font-black text-slate-900 tracking-tight">Gestion des Filières</h1>
             <p class="text-slate-500 mt-1">Liste de toutes les filières</p>
         </div>
-        <a href="{{ route('admin.filieres.create') }}" class="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-xl shadow-sm hover:shadow-md transition-all flex items-center gap-2">
+        <a href="{{ route('admin.filieres.create') }}" class="btn btn-primary flex items-center gap-2">
             <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
             </svg>
@@ -16,10 +16,10 @@
         </a>
     </div>
 
-    <div class="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
+    <div class="card overflow-hidden">
         <div class="overflow-x-auto">
-            <table class="w-full">
-                <thead class="bg-slate-50">
+            <table class="table">
+                <thead>
                     <tr>
                         <th class="px-6 py-4 text-left text-xs font-semibold text-slate-500 uppercase tracking-wider">Code</th>
                         <th class="px-6 py-4 text-left text-xs font-semibold text-slate-500 uppercase tracking-wider">Nom</th>
@@ -29,9 +29,9 @@
                         <th class="px-6 py-4 text-left text-xs font-semibold text-slate-500 uppercase tracking-wider">Actions</th>
                     </tr>
                 </thead>
-                <tbody class="divide-y divide-slate-100">
+                <tbody>
                     @forelse($filieres as $filiere)
-                        <tr class="hover:bg-slate-50 transition-colors">
+                        <tr>
                             <td class="px-6 py-4 font-mono text-sm text-slate-600">{{ $filiere->code }}</td>
                             <td class="px-6 py-4">
                                 <p class="font-medium text-slate-800">{{ $filiere->name }}</p>
@@ -41,12 +41,12 @@
                             </td>
                             <td class="px-6 py-4 text-slate-600">{{ $filiere->duration_years }} ans</td>
                             <td class="px-6 py-4">
-                                <span class="px-2 py-1 text-xs font-semibold bg-blue-100 text-blue-700 rounded-full">
+                                <span class="badge badge-primary">
                                     {{ $filiere->modules_count ?? $filiere->modules->count() }} modules
                                 </span>
                             </td>
                             <td class="px-6 py-4">
-                                <span class="px-2 py-1 text-xs font-semibold rounded-full {{ $filiere->is_active ? 'bg-emerald-100 text-emerald-700' : 'bg-slate-100 text-slate-600' }}">
+                                <span class="badge {{ $filiere->is_active ? 'badge-success' : 'badge-neutral' }}">
                                     {{ $filiere->is_active ? 'Active' : 'Inactive' }}
                                 </span>
                             </td>

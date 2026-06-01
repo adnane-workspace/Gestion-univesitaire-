@@ -4,34 +4,34 @@
 
 @section('content')
     <div class="mb-6">
-        <a href="{{ route('admin.modules.index') }}" class="text-slate-500 hover:text-slate-700 flex items-center gap-2 mb-4">
+        <a href="{{ route('admin.modules.index') }}" class="btn btn-ghost mb-4">
             <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
             </svg>
             Retour à la liste
         </a>
-        <h1 class="text-2xl font-bold text-slate-800">Nouveau Module</h1>
+        <h1 class="text-2xl font-black text-slate-900 tracking-tight">Nouveau Module</h1>
         <p class="text-slate-500 mt-1">Ajouter un nouveau module d'enseignement</p>
     </div>
 
-    <div class="bg-white rounded-2xl shadow-sm border border-slate-200 p-6">
+    <div class="card p-6">
         <form action="{{ route('admin.modules.store') }}" method="POST" class="space-y-6">
             @csrf
             
             <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div>
-                    <label for="name" class="block text-sm font-medium text-slate-700 mb-2">Nom du module</label>
+                    <label for="name" class="input-label">Nom du module</label>
                     <input type="text" id="name" name="name" value="{{ old('name') }}" required
-                        class="w-full px-4 py-3 rounded-xl border border-slate-200 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200 transition-all outline-none">
+                        class="input">
                     @error('name')
                         <p class="mt-1 text-sm text-red-500">{{ $message }}</p>
                     @enderror
                 </div>
 
                 <div>
-                    <label for="code" class="block text-sm font-medium text-slate-700 mb-2">Code (ex: M101, WEB1)</label>
+                    <label for="code" class="input-label">Code (ex: M101, WEB1)</label>
                     <input type="text" id="code" name="code" value="{{ old('code') }}" required
-                        class="w-full px-4 py-3 rounded-xl border border-slate-200 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200 transition-all outline-none">
+                        class="input">
                     @error('code')
                         <p class="mt-1 text-sm text-red-500">{{ $message }}</p>
                     @enderror
@@ -40,9 +40,9 @@
 
             <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
                 <div>
-                    <label for="filiere_id" class="block text-sm font-medium text-slate-700 mb-2">Filière</label>
+                    <label for="filiere_id" class="input-label">Filière</label>
                     <select id="filiere_id" name="filiere_id" required
-                        class="w-full px-4 py-3 rounded-xl border border-slate-200 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200 transition-all outline-none">
+                        class="input">
                         <option value="">Sélectionner une filière</option>
                         @foreach($filieres as $filiere)
                             <option value="{{ $filiere->id }}" {{ old('filiere_id') == $filiere->id ? 'selected' : '' }}>
@@ -56,9 +56,9 @@
                 </div>
 
                 <div>
-                    <label for="semester" class="block text-sm font-medium text-slate-700 mb-2">Semestre</label>
+                    <label for="semester" class="input-label">Semestre</label>
                     <select id="semester" name="semester" required
-                        class="w-full px-4 py-3 rounded-xl border border-slate-200 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200 transition-all outline-none">
+                        class="input">
                         @for($i = 1; $i <= 6; $i++)
                             <option value="{{ $i }}" {{ old('semester') == $i ? 'selected' : '' }}>Semestre {{ $i }}</option>
                         @endfor
@@ -78,18 +78,18 @@
 
             <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div>
-                    <label for="credits" class="block text-sm font-medium text-slate-700 mb-2">Nombre de crédits</label>
+                    <label for="credits" class="input-label">Nombre de crédits</label>
                     <input type="number" id="credits" name="credits" value="{{ old('credits', 6) }}" required min="1" max="30"
-                        class="w-full px-4 py-3 rounded-xl border border-slate-200 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200 transition-all outline-none">
+                        class="input">
                     @error('credits')
                         <p class="mt-1 text-sm text-red-500">{{ $message }}</p>
                     @enderror
                 </div>
 
                 <div>
-                    <label for="hours" class="block text-sm font-medium text-slate-700 mb-2">Volume horaire (H)</label>
+                    <label for="hours" class="input-label">Volume horaire (H)</label>
                     <input type="number" id="hours" name="hours" value="{{ old('hours', 40) }}" required min="1" max="200"
-                        class="w-full px-4 py-3 rounded-xl border border-slate-200 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200 transition-all outline-none">
+                        class="input">
                     @error('hours')
                         <p class="mt-1 text-sm text-red-500">{{ $message }}</p>
                     @enderror
@@ -97,19 +97,19 @@
             </div>
 
             <div>
-                <label for="description" class="block text-sm font-medium text-slate-700 mb-2">Description / Objectifs</label>
+                <label for="description" class="input-label">Description / Objectifs</label>
                 <textarea id="description" name="description" rows="4"
-                    class="w-full px-4 py-3 rounded-xl border border-slate-200 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200 transition-all outline-none">{{ old('description') }}</textarea>
+                    class="input">{{ old('description') }}</textarea>
                 @error('description')
                     <p class="mt-1 text-sm text-red-500">{{ $message }}</p>
                 @enderror
             </div>
 
             <div class="flex items-center gap-4 pt-4">
-                <button type="submit" class="bg-indigo-600 hover:bg-indigo-700 text-white px-6 py-3 rounded-xl font-medium shadow-sm hover:shadow-md transition-all">
+                <button type="submit" class="btn btn-primary">
                     Créer le module
                 </button>
-                <a href="{{ route('admin.modules.index') }}" class="text-slate-600 hover:text-slate-800 px-6 py-3">
+                <a href="{{ route('admin.modules.index') }}" class="btn btn-ghost">
                     Annuler
                 </a>
             </div>

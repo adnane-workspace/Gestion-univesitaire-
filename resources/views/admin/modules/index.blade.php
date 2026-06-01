@@ -5,10 +5,10 @@
 @section('content')
     <div class="mb-6 flex items-center justify-between">
         <div>
-            <h1 class="text-2xl font-bold text-slate-800">Gestion des Modules</h1>
+            <h1 class="text-2xl font-black text-slate-900 tracking-tight">Gestion des Modules</h1>
             <p class="text-slate-500 mt-1">Liste de tous les modules d'enseignement</p>
         </div>
-        <a href="{{ route('admin.modules.create') }}" class="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-xl shadow-sm hover:shadow-md transition-all flex items-center gap-2">
+        <a href="{{ route('admin.modules.create') }}" class="btn btn-primary flex items-center gap-2">
             <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
             </svg>
@@ -16,10 +16,10 @@
         </a>
     </div>
 
-    <div class="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
+    <div class="card overflow-hidden">
         <div class="overflow-x-auto">
-            <table class="w-full">
-                <thead class="bg-slate-50">
+            <table class="table">
+                <thead>
                     <tr>
                         <th class="px-6 py-4 text-left text-xs font-semibold text-slate-500 uppercase tracking-wider">Code</th>
                         <th class="px-6 py-4 text-left text-xs font-semibold text-slate-500 uppercase tracking-wider">Module</th>
@@ -30,16 +30,16 @@
                         <th class="px-6 py-4 text-left text-xs font-semibold text-slate-500 uppercase tracking-wider">Actions</th>
                     </tr>
                 </thead>
-                <tbody class="divide-y divide-slate-100">
+                <tbody>
                     @forelse($modules as $module)
-                        <tr class="hover:bg-slate-50 transition-colors">
+                        <tr>
                             <td class="px-6 py-4 font-mono text-sm text-slate-600">{{ $module->code }}</td>
                             <td class="px-6 py-4">
                                 <p class="font-medium text-slate-800">{{ $module->name }}</p>
                             </td>
                             <td class="px-6 py-4">
                                 @if($module->filiere)
-                                    <span class="px-2 py-1 text-xs font-semibold bg-slate-100 text-slate-700 rounded-full">
+                                    <span class="badge badge-primary">
                                         {{ $module->filiere->name }}
                                     </span>
                                 @else
@@ -85,7 +85,7 @@
                         </tr>
                     @empty
                         <tr>
-                            <td colspan="6" class="px-6 py-12 text-center">
+                            <td colspan="7" class="px-6 py-12 text-center">
                                 <div class="inline-flex items-center justify-center w-16 h-16 rounded-full bg-slate-100 text-slate-400 mb-4">
                                     <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
