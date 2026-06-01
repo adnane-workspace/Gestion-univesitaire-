@@ -10,45 +10,10 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Geist:wght@100..900&display=swap" rel="stylesheet">
-    <style>
-        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-        body {
-            font-family: 'Geist', system-ui, sans-serif;
-            -webkit-font-smoothing: antialiased;
-            background: #F8FAFC;
-            color: #0F172A;
-        }
-        :focus-visible { outline: 2px solid #4F46E5; outline-offset: 2px; border-radius: 8px; }
-
-        ::-webkit-scrollbar { width: 5px; height: 5px; }
-        ::-webkit-scrollbar-track { background: transparent; }
-        ::-webkit-scrollbar-thumb { background: #CBD5E1; border-radius: 999px; }
-        ::-webkit-scrollbar-thumb:hover { background: #94A3B8; }
-
-        .sidebar-link { transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1); position: relative; }
-        .sidebar-active {
-            background: linear-gradient(135deg, rgba(79,70,229,0.08), rgba(99,102,241,0.04));
-            color: #4F46E5;
-            font-weight: 700;
-        }
-        .sidebar-active::before {
-            content: '';
-            position: absolute;
-            left: 0; top: 50%; transform: translateY(-50%);
-            width: 3px; height: 60%;
-            background: #4F46E5;
-            border-radius: 0 4px 4px 0;
-        }
-
-        @keyframes fadeInDown {
-            from { opacity: 0; transform: translateY(-8px); }
-            to   { opacity: 1; transform: translateY(0); }
-        }
-        .anim-fade-down { animation: fadeInDown 0.3s ease-out both; }
-    </style>
+    @vite(['resources/css/app.css','resources/js/app.js'])
 </head>
 
-<body class="h-full">
+<body class="h-full bg-background">
 
     {{-- Mobile sidebar overlay --}}
     <div id="admin-sidebar-overlay" class="fixed inset-0 bg-black/40 backdrop-blur-sm z-40 hidden lg:hidden" onclick="closeAdminSidebar()"></div>
