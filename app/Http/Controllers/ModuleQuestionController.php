@@ -4,6 +4,8 @@ namespace App\Http\Controllers;
 
 use App\Models\Choice;
 use App\Models\Module;
+use App\Models\QcmAttempt;
+use App\Models\QcmAttemptAnswer;
 use App\Models\Question;
 use App\Services\AiClient;
 use Illuminate\Http\Request;
@@ -71,6 +73,109 @@ class ModuleQuestionController extends Controller
         $questions = $module->questions()->with('choices')->get();
 
         return view('professeur.module_qcm', compact('module', 'questions'));
+    }
+
+    public function attempts(Module $module)
+    {
+        $professor = Auth::user()->professor;
+        if (!$professor || !$professor->modules()->where('modules.id', $module->id)->exists()) {
+            abort(403, 'Accès non autorisé au module.');
+        }
+
+        $attempts = QcmAttempt::where('module_id', $module->id)
+            ->with('student')
+            ->orderByDesc('created_at')
+            ->get();
+
+        return view('professeur.module_qcm_attempts', compact('module', 'attempts'));
+    }
+
+    public function showAttempt(Module $module, QcmAttempt $attempt)
+    {
+        $professor = Auth::user()->professor;
+        if (!$professor || !$professor->modules()->where('modules.id', $module->id)->exists()) {
+            abort(403, 'Accès non autorisé au module.');
+        }
+
+        if ($attempt->module_id !== $module->id) {
+            abort(404, 'Tentative introuvable pour ce module.');
+        }
+
+        $attempt->load(['student', 'answers.question.choices', 'answers.selectedChoice']);
+
+        return view('professeur.module_qcm_attempt_show', compact('module', 'attempt'));
+    }
+
+    public function studentQcm(Module $module)
+    {
+        $student = Auth::user()->student;
+        if (!$student || $student->filiere_id !== $module->filiere_id) {
+            abort(403, 'Accès non autorisé au module.');
+        }
+
+        $questions = $module->questions()->with('choices')->get();
+
+        return view('etudiant.module_qcm', compact('module', 'questions'));
+    }
+
+    public function submitStudentQcm(Request $request, Module $module)
+    {
+        $student = Auth::user()->student;
+        if (!$student || $student->filiere_id !== $module->filiere_id) {
+            abort(403, 'Accès non autorisé au module.');
+        }
+
+        $request->validate([
+            'answers' => 'required|array',
+            'answers.*' => 'nullable|integer|exists:choices,id',
+        ]);
+
+        $questions = $module->questions()->with('choices')->get();
+        if ($questions->isEmpty()) {
+            return redirect()->route('etudiant.modules.qcm', ['module' => $module->id])
+                ->with('error', 'Aucun QCM disponible pour ce module.');
+        }
+
+        $answers = $request->input('answers', []);
+        $questionCount = $questions->count();
+        $correctCount = 0;
+
+        DB::transaction(function () use ($student, $module, $questions, $answers, &$correctCount, $questionCount) {
+            $attempt = QcmAttempt::create([
+                'student_id' => $student->id,
+                'module_id' => $module->id,
+                'score' => 0,
+                'max_score' => 20,
+                'correct_count' => 0,
+                'question_count' => $questionCount,
+            ]);
+
+            foreach ($questions as $question) {
+                $selectedChoiceId = isset($answers[$question->id]) ? intval($answers[$question->id]) : null;
+                $choice = $question->choices->firstWhere('id', $selectedChoiceId);
+                $isCorrect = $choice && $choice->is_correct;
+
+                if ($isCorrect) {
+                    $correctCount++;
+                }
+
+                QcmAttemptAnswer::create([
+                    'qcm_attempt_id' => $attempt->id,
+                    'question_id' => $question->id,
+                    'selected_choice_id' => $selectedChoiceId,
+                    'is_correct' => $isCorrect,
+                ]);
+            }
+
+            $score = $questionCount > 0 ? (int) round(($correctCount / $questionCount) * 20) : 0;
+            $attempt->update([
+                'score' => $score,
+                'correct_count' => $correctCount,
+            ]);
+        });
+
+        return redirect()->route('etudiant.modules.qcm', ['module' => $module->id])
+            ->with('success', 'Votre réponse a été enregistrée. Score : ' . $correctCount . ' / ' . $questionCount . ' (' . (int) round(($questionCount > 0 ? ($correctCount / $questionCount) * 20 : 0)) . '/20).');
     }
 
     protected function buildPrompt(Module $module, int $count, string $difficulty): string

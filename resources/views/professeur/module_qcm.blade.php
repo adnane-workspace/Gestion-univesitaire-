@@ -11,6 +11,7 @@
             </div>
             <div class="flex flex-wrap gap-3">
                 <a href="{{ route('professeur.modules') }}" class="inline-flex items-center justify-center rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm font-bold text-slate-700 hover:bg-slate-50 transition">Retour aux modules</a>
+                <a href="{{ route('professeur.modules.qcm.attempts', ['module' => $module->id]) }}" class="inline-flex items-center justify-center rounded-xl border border-indigo-100 bg-indigo-50 px-4 py-3 text-sm font-bold text-indigo-700 hover:bg-indigo-100 transition">Voir les tentatives</a>
                 <form id="generateForm" class="inline-flex">
                     @csrf
                     <input type="hidden" name="num" value="10">

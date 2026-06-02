@@ -54,6 +54,8 @@ Route::middleware(['auth', 'CheckProfesseur'])->prefix('professeur')->name('prof
     Route::get('/modules', [ProfesseurDashboardController::class, 'modules'])->name('modules');
     Route::post('/modules/{module}/generate-qcm', [ModuleQuestionController::class, 'generate'])->name('modules.generate-qcm');
     Route::get('/modules/{module}/qcm', [ModuleQuestionController::class, 'show'])->name('modules.qcm');
+    Route::get('/modules/{module}/qcm/attempts', [ModuleQuestionController::class, 'attempts'])->name('modules.qcm.attempts');
+    Route::get('/modules/{module}/qcm/attempts/{attempt}', [ModuleQuestionController::class, 'showAttempt'])->name('modules.qcm.attempts.show');
     Route::get('/grades', [ProfesseurDashboardController::class, 'grades'])->name('grades');
     Route::post('/grades', [ProfesseurDashboardController::class, 'storeGrades'])->name('grades.store');
     Route::get('/absences', [ProfesseurDashboardController::class, 'absences'])->name('absences');
@@ -66,6 +68,8 @@ Route::middleware(['auth', 'CheckEtudiant'])->prefix('etudiant')->name('etudiant
     Route::get('/dashboard', [EtudiantDashboardController::class, 'index'])->name('dashboard');
     Route::get('/grades', [EtudiantDashboardController::class, 'grades'])->name('grades');
     Route::get('/modules', [EtudiantDashboardController::class, 'modules'])->name('modules');
+    Route::get('/modules/{module}/qcm', [ModuleQuestionController::class, 'studentQcm'])->name('modules.qcm');
+    Route::post('/modules/{module}/qcm', [ModuleQuestionController::class, 'submitStudentQcm'])->name('modules.qcm.submit');
     Route::get('/schedule', [EtudiantDashboardController::class, 'schedule'])->name('schedule');
     Route::get('/bulletin', [EtudiantDashboardController::class, 'bulletinPdf'])->name('bulletin.pdf');
     Route::post('/chatbot/query', [EtudiantDashboardController::class, 'chatbotQuery'])->name('chatbot.query');

@@ -46,7 +46,7 @@ class EtudiantDashboardController extends Controller
             Auth::logout();
             return redirect()->route('login')->with('error', 'Votre profil étudiant n\'est pas configuré.');
         }
-        $modules = $student->filiere->modules()->with('professors')->get();
+        $modules = $student->filiere->modules()->with('professors')->withCount('questions')->get();
         return view('etudiant.modules', compact('modules'));
     }
 

@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use App\Models\QcmAttempt;
 
 class Student extends Model
 {
@@ -33,6 +34,11 @@ class Student extends Model
     public function grades()
     {
         return $this->hasMany(Grade::class);
+    }
+
+    public function qcmAttempts()
+    {
+        return $this->hasMany(QcmAttempt::class);
     }
 
     public function filiere()
