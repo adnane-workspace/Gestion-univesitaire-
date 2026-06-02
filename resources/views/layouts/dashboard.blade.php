@@ -12,6 +12,42 @@
     <link href="https://fonts.googleapis.com/css2?family=Geist:wght@100..900&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <meta name="csrf-token" content="{{ csrf_token() }}">
     @vite(['resources/css/app.css','resources/js/app.js'])
+
+    <style>
+        /* Compact sidebar + label reveal on lg */
+        #sidebar { width: 5rem; } /* 80px compact */
+        @media (min-width: 1024px) { #sidebar { width: 260px; } }
+
+        /* Sidebar link collapsed - hide text and keep icon centered */
+        .sidebar-link { display: flex; align-items:center; gap:0.75rem; padding:0.625rem; border-radius:0.75rem; }
+        /* hide text nodes on small screens by setting font-size:0, restore on lg */
+        #sidebar .sidebar-link { font-size: 0; }
+        #sidebar .sidebar-link svg, #sidebar .sidebar-link .icon { font-size: inherit; }
+        @media (min-width:1024px) { #sidebar .sidebar-link { font-size: 0.875rem; } }
+
+        /* Active left accent */
+        .sidebar-link.active { position: relative; }
+        .sidebar-link.active::before {
+            content: '';
+            position: absolute;
+            left: 0.35rem;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 4px;
+            height: 48%;
+            border-radius: 9999px;
+            background: linear-gradient(180deg,#6366F1,#3B82F6);
+            box-shadow: 0 6px 18px rgba(59,130,246,0.12);
+        }
+
+        /* Set Inter as default */
+        body { font-family: 'Inter', ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial; }
+
+        /* Radial progress util (simple) */
+        .radial-progress { --size: 7rem; width: var(--size); height: var(--size); border-radius: 9999px; display:grid; place-items:center; position:relative; }
+        .radial-progress .track { position:absolute; inset:0; border-radius:9999px; background: conic-gradient(var(--color, #6366F1) var(--value, 0%), #E6E9F8 0%); }
+        .radial-progress .inner { position:relative; width:84%; height:84%; border-radius:9999px; background:white; display:grid; place-items:center; font-weight:700; }
+    </style>
 </head>
 
 <body class="h-full bg-background">
@@ -22,14 +58,14 @@
     <div class="flex h-full overflow-hidden">
 
         {{-- ═══════════════════════════════════════ SIDEBAR ═══════════════════════════════════════ --}}
-        <aside id="sidebar" class="fixed inset-y-0 left-0 z-50 w-[260px] bg-white border-r border-border flex flex-col transform -translate-x-full lg:translate-x-0 lg:static lg:z-auto transition-transform duration-300 ease-out">
+        <aside id="sidebar" class="fixed inset-y-0 left-0 z-50 bg-white border-r border-border flex flex-col transform -translate-x-full lg:translate-x-0 lg:static lg:z-auto transition-transform duration-300 ease-out">
 
             {{-- Logo --}}
-            <div class="px-6 py-5 flex items-center gap-3 border-b border-border-light shrink-0">
-                <div class="w-9 h-9 rounded-xl bg-gradient-to-br from-primary to-primary-dark flex items-center justify-center shadow-md shadow-primary/20 shrink-0">
+            <div class="px-4 py-4 flex items-center gap-3 border-b border-border-light shrink-0 justify-center lg:justify-start">
+                <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-primary to-primary-dark flex items-center justify-center shadow-md shadow-primary/20 shrink-0">
                     <span class="text-white font-black text-sm">U</span>
                 </div>
-                <div class="min-w-0">
+                <div class="min-w-0 hidden lg:block">
                     <p class="text-sm font-black text-text leading-none tracking-tight">EduPortal</p>
                     <p class="text-[10px] font-bold text-text-muted uppercase tracking-widest mt-0.5">UPF</p>
                 </div>
