@@ -48,12 +48,58 @@
                         @endforeach
                     </div>
                 </div>
-                <div class="p-6 bg-white border-t border-slate-100 flex gap-4">
+                <div class="p-6 bg-white border-t border-slate-100 flex flex-col sm:flex-row gap-3">
                     <a href="{{ route('professeur.grades', ['module_id' => $module->id]) }}" class="flex-1 bg-indigo-600 hover:bg-indigo-700 text-white text-center py-3 rounded-xl font-bold text-sm transition-all shadow-lg shadow-indigo-100">
                         Saisir les notes
                     </a>
+                    <a href="{{ route('professeur.modules.qcm', ['module' => $module->id]) }}" class="flex-1 bg-slate-100 hover:bg-slate-200 text-slate-700 text-center py-3 rounded-xl font-bold text-sm transition-all border border-slate-200">
+                        Voir QCM
+                    </a>
+                    <button type="button" data-module-id="{{ $module->id }}" class="generate-qcm flex-1 bg-emerald-600 hover:bg-emerald-700 text-white text-center py-3 rounded-xl font-bold text-sm transition-all shadow-lg shadow-emerald-100">
+                        Générer QCM
+                    </button>
                 </div>
             </div>
         @endforeach
     </div>
+
+    <script>
+        document.querySelectorAll('.generate-qcm').forEach(function (button) {
+            button.addEventListener('click', async function () {
+                const moduleId = this.dataset.moduleId;
+                this.disabled = true;
+                this.textContent = 'Génération...';
+
+                const response = await fetch(`/professeur/modules/${moduleId}/generate-qcm`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                        'Accept': 'application/json'
+                    },
+                    body: JSON.stringify({ num: 10, difficulty: 'moyen' })
+                });
+
+                this.disabled = false;
+                this.textContent = 'Générer QCM';
+
+                if (!response.ok) {
+                    const payload = await response.json().catch(() => null);
+                    alert(payload?.error || 'Erreur lors de la génération du QCM.');
+                    return;
+                }
+
+                const payload = await response.json();
+                if (payload.redirect) {
+                    let url = payload.redirect;
+                    if (payload.mock) {
+                        url += (url.includes('?') ? '&' : '?') + 'mock=1';
+                    }
+                    window.location.href = url;
+                } else {
+                    window.location.reload();
+                }
+            });
+        });
+    </script>
 @endsection

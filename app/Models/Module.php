@@ -42,6 +42,11 @@ class Module extends Model
         return $this->hasMany(Schedule::class);
     }
 
+    public function questions()
+    {
+        return $this->hasMany(Question::class);
+    }
+
     public function professors()
     {
         return $this->belongsToMany(Professor::class, 'professor_module')

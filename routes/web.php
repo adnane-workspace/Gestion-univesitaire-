@@ -10,6 +10,7 @@ use App\Http\Controllers\Admin\RoomController;
 
 use App\Http\Controllers\ProfesseurDashboardController;
 use App\Http\Controllers\EtudiantDashboardController;
+use App\Http\Controllers\ModuleQuestionController;
 use App\Http\Controllers\Auth\AuthenticatedSessionController;
 use App\Http\Controllers\Auth\RegisteredUserController;
 
@@ -51,6 +52,8 @@ Route::middleware(['auth', 'CheckAdmin'])->prefix('admin')->name('admin.')->grou
 Route::middleware(['auth', 'CheckProfesseur'])->prefix('professeur')->name('professeur.')->group(function () {
     Route::get('/dashboard', [ProfesseurDashboardController::class, 'index'])->name('dashboard');
     Route::get('/modules', [ProfesseurDashboardController::class, 'modules'])->name('modules');
+    Route::post('/modules/{module}/generate-qcm', [ModuleQuestionController::class, 'generate'])->name('modules.generate-qcm');
+    Route::get('/modules/{module}/qcm', [ModuleQuestionController::class, 'show'])->name('modules.qcm');
     Route::get('/grades', [ProfesseurDashboardController::class, 'grades'])->name('grades');
     Route::post('/grades', [ProfesseurDashboardController::class, 'storeGrades'])->name('grades.store');
     Route::get('/absences', [ProfesseurDashboardController::class, 'absences'])->name('absences');
