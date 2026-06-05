@@ -180,17 +180,33 @@ class ModuleQuestionController extends Controller
 
     protected function buildPrompt(Module $module, int $count, string $difficulty): string
     {
-        $elements = $module->moduleElements()->pluck('name')->filter()->implode(', ');
+        $elements = $module->moduleElements()->get();
+        $elementsList = $elements->pluck('name')->filter()->implode(', ');
         $description = trim($module->description ?? '');
+        
+        // Build detailed context from module elements
+        $elementDetails = '';
+        foreach ($elements as $element) {
+            $elementDesc = trim($element->description ?? '');
+            if ($elementDesc) {
+                $elementDetails .= "\n- {$element->name}: {$elementDesc}";
+            } else {
+                $elementDetails .= "\n- {$element->name}";
+            }
+        }
 
         return "Tu es un assistant pédagogique. Génère $count questions de révision QCM pour le module suivant. " .
             "Présente ta réponse uniquement sous forme de JSON strict. " .
-            "Le format doit être : {\"questions\":[{\"question\":\"...\",\"choices\":[\"...\",...],\"correct_index\":0,\"explanation\":\"...\"}]}. " .
+            "Le format doit être : {\"questions\":[{\"question\":\"...\",\"choices\":[\"...\",\"...\",\"...\",\"...\"],\"correct_index\":0,\"explanation\":\"...\",\"difficulty\":\"...\"}]}. " .
             "Chaque question doit avoir exactement 4 propositions. " .
-            "Donne des questions claires, en français, adaptées à un niveau $difficulty.\n\n" .
+            "Le champ correct_index doit être un entier entre 0 et 3. " .
+            "Assure-toi que toutes les questions sont différentes et n'utilise pas deux fois la même formulation. " .
+            "Donne des questions claires, en français, adaptées à un niveau $difficulty. " .
+            "N’utilise pas de code Markdown, de balises ou de commentaires supplémentaires.\n\n" .
             "Module: {$module->name}\n" .
             "Description: $description\n" .
-            "Éléments: $elements\n\n" .
+            "Éléments du module:$elementDetails\n\n" .
+            "Génère des questions pertinentes et variées basées sur le contenu du module. Les questions doivent couvrir les différents éléments du module.\n\n" .
             "Réponds uniquement par le JSON demandé, sans texte supplémentaire.";
     }
 
@@ -199,14 +215,21 @@ class ModuleQuestionController extends Controller
         DB::transaction(function () use ($module, $parsed) {
             $module->questions()->where('ai_generated', true)->delete();
 
+            $seenQuestions = [];
             foreach ($parsed['questions'] as $item) {
                 if (empty($item['question']) || empty($item['choices']) || !is_array($item['choices'])) {
                     continue;
                 }
 
+                $questionText = trim($item['question']);
+                if ($questionText === '' || isset($seenQuestions[$questionText])) {
+                    continue;
+                }
+                $seenQuestions[$questionText] = true;
+
                 $question = Question::create([
                     'module_id' => $module->id,
-                    'text' => trim($item['question']),
+                    'text' => $questionText,
                     'explanation' => $item['explanation'] ?? null,
                     'difficulty' => $item['difficulty'] ?? null,
                     'ai_generated' => true,
@@ -231,21 +254,71 @@ class ModuleQuestionController extends Controller
     protected function buildMockResponse(Module $module, int $count): array
     {
         $questions = [];
-        $elements = $module->moduleElements()->pluck('name')->filter()->toArray();
-        for ($i = 1; $i <= $count; $i++) {
-            $el = $elements ? $elements[array_rand($elements)] : $module->name;
-            $qText = "Question {$i} — Quel est le concept lié à \"{$el}\" ?";
-            $choices = [
-                "Réponse correcte sur {$el}",
-                "Réponse distracteur A",
-                "Réponse distracteur B",
-                "Réponse distracteur C",
+        $elements = $module->moduleElements()->get();
+
+        $topicPool = [];
+        foreach ($elements as $element) {
+            $name = trim($element->name ?? '');
+            if ($name === '') {
+                continue;
+            }
+
+            $topicPool[$name] = [
+                'name' => $name,
+                'desc' => trim($element->description ?? '') ?: $name,
             ];
+        }
+
+        $defaultTopics = [
+            'Bases de données' => 'Un système de stockage structuré pour les informations',
+            'CRUD' => 'Créer, lire, mettre à jour et supprimer des enregistrements',
+            'Front-end' => 'La partie visible d’une application web',
+            'Back-end' => 'La partie serveur qui gère la logique métier',
+            'Serveur web' => 'Un logiciel qui répond aux requêtes HTTP',
+            'API' => 'Une interface permettant à des applications de communiquer',
+            'SQL' => 'Un langage de requête pour gérer des bases de données relationnelles',
+            'HTML' => 'Le langage de balisage pour structurer des pages web',
+            'CSS' => 'Le langage de style pour présenter les pages web',
+            'JavaScript' => 'Un langage de programmation exécuté côté client',
+        ];
+
+        foreach ($defaultTopics as $name => $desc) {
+            if (!isset($topicPool[$name])) {
+                $topicPool[$name] = ['name' => $name, 'desc' => $desc];
+            }
+        }
+
+        $topicPool = array_values($topicPool);
+        shuffle($topicPool);
+
+        $templates = [
+            fn(array $topic) => "Qu'est-ce que le/la \"{$topic['name']}\" ?",
+            fn(array $topic) => "Quel est l'objectif principal de \"{$topic['name']}\" ?",
+            fn(array $topic) => "Dans quel contexte utilise-t-on \"{$topic['name']}\" ?",
+            fn(array $topic) => "Quelle affirmation décrit le mieux \"{$topic['name']}\" ?",
+            fn(array $topic) => "Pourquoi \"{$topic['name']}\" est-il/elle important(e) ?",
+        ];
+
+        for ($i = 0; $i < $count; $i++) {
+            $topic = $topicPool[$i % count($topicPool)];
+            $template = $templates[$i % count($templates)];
+            $qText = $template($topic);
+
+            $choices = [
+                $topic['desc'],
+                'Un concept de programmation orientée objet',
+                'Un type de base de données non-relationnelle',
+                "Un outil d'administration système",
+            ];
+            shuffle($choices);
+            $correctIndex = array_search($topic['desc'], $choices, true);
+
             $questions[] = [
                 'question' => $qText,
                 'choices' => $choices,
-                'correct_index' => 0,
-                'explanation' => "Explication courte sur {$el}.",
+                'correct_index' => $correctIndex !== false ? $correctIndex : 0,
+                'explanation' => "{$topic['name']} : {$topic['desc']}",
+                'difficulty' => 'moyen',
             ];
         }
 

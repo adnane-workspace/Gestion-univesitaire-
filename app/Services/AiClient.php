@@ -75,6 +75,7 @@ class AiClient
             throw new RuntimeException('Impossible de lire le contenu renvoyé par l’API IA.');
         }
 
+        $text = $this->stripCodeFences($text);
         $json = $this->extractJson($text);
         if (!$json) {
             throw new RuntimeException('La réponse IA ne contient pas un JSON valide.');
@@ -85,6 +86,7 @@ class AiClient
             throw new RuntimeException('Échec du décodage JSON renvoyé par l’IA.');
         }
 
+        $this->validateParsedQuestions($data);
         return $data;
     }
 
@@ -98,5 +100,38 @@ class AiClient
         }
 
         return substr($text, $start, $end - $start + 1);
+    }
+
+    protected function stripCodeFences(string $text): string
+    {
+        $text = preg_replace('/```(?:json)?\r?\n(.*)\r?\n```/si', '$1', $text);
+        return trim($text);
+    }
+
+    protected function validateParsedQuestions(array $data): void
+    {
+        if (!isset($data['questions']) || !is_array($data['questions'])) {
+            throw new RuntimeException('Le JSON IA ne contient pas de tableau questions valide.');
+        }
+
+        foreach ($data['questions'] as $index => $item) {
+            if (!is_array($item)) {
+                throw new RuntimeException("La question #$index n'est pas un objet JSON valide.");
+            }
+            if (empty($item['question']) || !is_string($item['question'])) {
+                throw new RuntimeException("La question #$index n'a pas de texte valide.");
+            }
+            if (!isset($item['choices']) || !is_array($item['choices']) || count($item['choices']) !== 4) {
+                throw new RuntimeException("La question #$index doit contenir exactement 4 propositions.");
+            }
+            foreach ($item['choices'] as $choiceIndex => $choice) {
+                if (!is_string($choice) || trim($choice) === '') {
+                    throw new RuntimeException("La proposition #$choiceIndex de la question #$index est invalide.");
+                }
+            }
+            if (!isset($item['correct_index']) || !is_int($item['correct_index']) || $item['correct_index'] < 0 || $item['correct_index'] > 3) {
+                throw new RuntimeException("La question #$index doit définir un correct_index entier entre 0 et 3.");
+            }
+        }
     }
 }
